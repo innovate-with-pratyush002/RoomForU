@@ -8,13 +8,11 @@ module.exports.getUserProfile = async (req, res, next) => {
         const userId = req.user._id;
 
         const [userData, userListings] = await Promise.all([
-            UserAuth.findById(userId).select("-hash -salt"),
+            UserAuth.findById(userId).select("-hash -salt").lean(),
             Listing.find({ user: userId })
-                .populate({
-                    path: "reviews",
-                    populate: { path: "owner", select: "name picture" }
-                })
+                .select("title price location state roomType preferredTenant availabilityStatus image contact mapCoordinates createdAt")
                 .sort({ createdAt: -1 })
+                .lean()
         ]);
 
         if (!userData) {

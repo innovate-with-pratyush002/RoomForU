@@ -35,7 +35,7 @@ module.exports.isLoggedIn = (req, res, next) => {
 module.exports.isUser = async (req, res, next) => {
     try {
         const { id } = req.params;
-        const listing = await Listing.findById(id);
+        const listing = await Listing.findById(id).select("_id user");
 
         if (!listing) {
             if (isApiRequest(req)) {
@@ -83,7 +83,7 @@ module.exports.isUser = async (req, res, next) => {
 module.exports.isReviewOwner = async (req, res, next) => {
     try {
         const { id, reviewId } = req.params;
-        const review = await Review.findById(reviewId);
+        const review = await Review.findById(reviewId).select("_id owner");
 
         if (!review) {
             if (isApiRequest(req)) {

@@ -165,7 +165,7 @@ passport.serializeUser((user, done) => {
 
 passport.deserializeUser(async (id, done) => {
     try {
-        const user = await userAuth.findById(id);
+        const user = await userAuth.findById(id).select("-hash -salt").lean();
         done(null, user);
     } catch (err) {
         done(err, null);
@@ -210,8 +210,13 @@ async function startServer() {
     }
 
     try {
-        // Connect to MongoDB before accepting traffic
-        await mongoose.connect(mongoUrl);
+        // Connect to MongoDB with production-grade pool and timeout options
+        await mongoose.connect(mongoUrl, {
+            maxPoolSize: 25,
+            minPoolSize: 5,
+            serverSelectionTimeoutMS: 5000,
+            socketTimeoutMS: 45000,
+        });
         console.log("Connected to MongoDB successfully.");
 
         // Monitor connection health after startup

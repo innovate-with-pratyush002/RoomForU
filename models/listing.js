@@ -2,6 +2,7 @@ const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 const Review = require("./review.js");
 const UserAuth = require("./authentication.js");
+const { destroyCloudinaryImage } = require("../cloudConfig.js");
 
 const listingSchema = new Schema(
   {
@@ -96,17 +97,14 @@ const listingSchema = new Schema(
 );
 
 
-               //   INDEXES 
-
-
+// INDEXES
 listingSchema.index({ mapCoordinates: "2dsphere" });
-
 listingSchema.index({ location: 1, state: 1 });
-
 listingSchema.index({ price: 1 });
-
 listingSchema.index({ user: 1 });
-
+listingSchema.index({ createdAt: -1 });
+listingSchema.index({ roomType: 1, price: 1 });
+listingSchema.index({ availabilityStatus: 1 });
 
 listingSchema.index({
   title: "text",
@@ -114,10 +112,15 @@ listingSchema.index({
   description: "text"
 });
 
-// Delete related reviews when a listing is deleted
+// Delete related reviews and Cloudinary image when a listing is deleted
 listingSchema.post("findOneAndDelete", async (listing) => {
-  if (listing && listing.reviews.length > 0) {
-    await Review.deleteMany({ _id: { $in: listing.reviews } });
+  if (listing) {
+    if (listing.reviews && listing.reviews.length > 0) {
+      await Review.deleteMany({ _id: { $in: listing.reviews } });
+    }
+    if (listing.image?.fileName) {
+      await destroyCloudinaryImage(listing.image.fileName);
+    }
   }
 });
 

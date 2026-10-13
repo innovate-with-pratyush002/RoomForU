@@ -1,13 +1,14 @@
 const express = require("express");
 const router = express.Router();
 const multer = require("multer");
-const { storage } = require("../../../cloudConfig.js");
+const { storage, imageFileFilter } = require("../../../cloudConfig.js");
 const { isLoggedIn, isUser, isReviewOwner } = require("../../../middleware.js");
 const listingController = require("../../../controller/api/v1/listingController.js");
 
 const upload = multer({
     storage,
-    limits: { fileSize: 5 * 1024 * 1024 } // 5MB file upload limit
+    limits: { fileSize: 5 * 1024 * 1024 }, // 5MB file upload limit
+    fileFilter: imageFileFilter
 });
 
 // Flexible upload middleware supporting both JSON APIs and multipart forms

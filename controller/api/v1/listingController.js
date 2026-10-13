@@ -1,6 +1,7 @@
 const Listing = require("../../../models/listing.js");
 const Review = require("../../../models/review.js");
 const ExpressError = require("../../../utils/ExpressError.js");
+const { destroyCloudinaryImage } = require("../../../cloudConfig.js");
 
 // Formatter to provide clean, normalized responses compatible with both Next.js frontend and standard REST clients
 const formatListingResponse = (listing) => {
@@ -123,10 +124,12 @@ module.exports.getAllListings = async (req, res, next) => {
         const [total, listings] = await Promise.all([
             Listing.countDocuments(filter),
             Listing.find(filter)
+                .select("title price location state roomType preferredTenant availabilityStatus image user createdAt mapCoordinates")
                 .populate("user", "name email picture")
                 .sort(sortOption)
                 .skip(skip)
                 .limit(limitNum)
+                .lean()
         ]);
 
         return res.status(200).json({
@@ -152,7 +155,8 @@ module.exports.getListingById = async (req, res, next) => {
                 path: "reviews",
                 populate: { path: "owner", select: "name picture" }
             })
-            .populate("user", "name email picture");
+            .populate("user", "name email picture")
+            .lean();
 
         if (!listing) {
             throw new ExpressError(404, "Listing not found.");
@@ -289,6 +293,12 @@ module.exports.updateListing = async (req, res, next) => {
         }
 
         if (req.file) {
+            // Delete old Cloudinary image to prevent orphaned storage leaks
+            const existingListing = await Listing.findById(id).select("image").lean();
+            if (existingListing?.image?.fileName) {
+                await destroyCloudinaryImage(existingListing.image.fileName);
+            }
+
             updateData.image = {
                 url: req.file.path,
                 fileName: req.file.filename

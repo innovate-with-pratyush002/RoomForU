@@ -20,5 +20,8 @@ const reviewSchema = new Schema({
           required: true
         } 
 });
+
+reviewSchema.index({ owner: 1 });
+
 const Review=mongoose.model("Review",reviewSchema);
 module.exports =Review;

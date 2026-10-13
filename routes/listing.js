@@ -5,9 +5,13 @@ const ExpressError= require("../utils/ExpressError.js");
 const router= express.Router();
 const {isLoggedIn, isUser} = require("../middleware.js");
 const ListingControllers= require("../controller/listing.js");
-const multer  = require('multer');
-const {storage}= require("../cloudConfig.js");
-const upload = multer({ storage });
+const multer = require('multer');
+const { storage, imageFileFilter } = require("../cloudConfig.js");
+const upload = multer({
+    storage,
+    limits: { fileSize: 5 * 1024 * 1024 },
+    fileFilter: imageFileFilter
+});
 
 
 //route for showing all listings:=>

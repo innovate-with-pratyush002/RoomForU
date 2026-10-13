@@ -1,8 +1,12 @@
 const Listing = require("../models/listing");
+const { destroyCloudinaryImage } = require("../cloudConfig");
 
 //route for showing all listings:=>
 module.exports.showAllListings = async (req, res) => {
-    const allListings = await Listing.find({});
+    const allListings = await Listing.find({})
+        .select("title price location state roomType preferredTenant availabilityStatus image user createdAt mapCoordinates")
+        .sort({ createdAt: -1 })
+        .lean();
     res.render("./listings/listing.ejs", { allListings });
 };
 
@@ -88,6 +92,10 @@ module.exports.updateListing = async (req, res) => {
     }
 
     if (typeof req.file !== "undefined") {
+        const existingListing = await Listing.findById(id).select("image").lean();
+        if (existingListing?.image?.fileName) {
+            await destroyCloudinaryImage(existingListing.image.fileName);
+        }
         updateData.image = {
             url: req.file.path,
             fileName: req.file.filename
