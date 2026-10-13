@@ -36,7 +36,10 @@ export async function getListing(id: string): Promise<Listing | null> {
   try {
     if (!id) return null;
     return await api.listings.getById(id);
-  } catch (error) {
+  } catch (error: any) {
+    if (error?.status === 401) {
+      throw error;
+    }
     console.error(`Failed to fetch listing with id ${id} from API:`, error);
     return null;
   }

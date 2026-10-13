@@ -2,7 +2,7 @@
 
 import dynamic from "next/dynamic";
 import { Crosshair, MapPin } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 const MapPicker = dynamic(() => import("@/components/maps/MapPicker"), {
   ssr: false,
@@ -16,26 +16,78 @@ const MapPicker = dynamic(() => import("@/components/maps/MapPicker"), {
   ),
 });
 
+export async function reverseGeocodeNominatim(
+  lat: number,
+  lon: number
+): Promise<{ location: string; state: string } | null> {
+  try {
+    const res = await fetch(
+      `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&addressdetails=1`,
+      {
+        headers: {
+          Accept: "application/json",
+        },
+      }
+    );
+    if (!res.ok) return null;
+    const data = await res.json();
+    const a = data?.address || {};
+    const loc =
+      a.suburb ||
+      a.neighbourhood ||
+      a.residential ||
+      a.road ||
+      a.city ||
+      a.town ||
+      a.village ||
+      data?.display_name ||
+      "";
+    const st = a.state || "";
+    return { location: loc, state: st };
+  } catch (err) {
+    console.error("Failed to reverse geocode address:", err);
+    return null;
+  }
+}
+
 interface LocationPickerProps {
   initialLat?: number;
   initialLon?: number;
+  coordinates?: { lat: number; lon: number } | null;
   onChange?: (coords: { lat: number; lon: number }) => void;
+  onAddressResolved?: (address: { location: string; state: string; lat: number; lon: number }) => void;
 }
 
 export function LocationPicker({
   initialLat,
   initialLon,
+  coordinates: coordinatesProp,
   onChange,
+  onAddressResolved,
 }: LocationPickerProps) {
-  const [coordinates, setCoordinates] = useState<{ lat: number; lon: number } | null>(
+  const [internalCoords, setInternalCoords] = useState<{ lat: number; lon: number } | null>(
     initialLat && initialLon ? { lat: initialLat, lon: initialLon } : null
   );
   const [locating, setLocating] = useState(false);
   const [geoError, setGeoError] = useState<string | null>(null);
 
-  const handleCoordsChange = (coords: { lat: number; lon: number }) => {
-    setCoordinates(coords);
+  const activeCoordinates = coordinatesProp !== undefined ? coordinatesProp : internalCoords;
+
+  const handleCoordsChange = async (coords: { lat: number; lon: number }, reverseGeocode = true) => {
+    setInternalCoords(coords);
     if (onChange) onChange(coords);
+
+    if (reverseGeocode && onAddressResolved) {
+      const resolved = await reverseGeocodeNominatim(coords.lat, coords.lon);
+      if (resolved && (resolved.location || resolved.state)) {
+        onAddressResolved({
+          location: resolved.location,
+          state: resolved.state,
+          lat: coords.lat,
+          lon: coords.lon,
+        });
+      }
+    }
   };
 
   const locate = () => {
@@ -46,13 +98,12 @@ export function LocationPicker({
     setLocating(true);
     setGeoError(null);
     navigator.geolocation.getCurrentPosition(
-      ({ coords }) => {
+      async ({ coords }) => {
         const newCoords = {
           lat: Number(coords.latitude.toFixed(6)),
           lon: Number(coords.longitude.toFixed(6)),
         };
-        setCoordinates(newCoords);
-        if (onChange) onChange(newCoords);
+        await handleCoordsChange(newCoords, true);
         setLocating(false);
       },
       (err) => {
@@ -65,10 +116,10 @@ export function LocationPicker({
 
   return (
     <div>
-      <input type="hidden" name="place[lat]" value={coordinates?.lat ?? ""} />
-      <input type="hidden" name="place[lon]" value={coordinates?.lon ?? ""} />
-      <input type="hidden" name="lat" value={coordinates?.lat ?? ""} />
-      <input type="hidden" name="lon" value={coordinates?.lon ?? ""} />
+      <input type="hidden" name="place[lat]" value={activeCoordinates?.lat ?? ""} />
+      <input type="hidden" name="place[lon]" value={activeCoordinates?.lon ?? ""} />
+      <input type="hidden" name="lat" value={activeCoordinates?.lat ?? ""} />
+      <input type="hidden" name="lon" value={activeCoordinates?.lon ?? ""} />
 
       <div className="mt-5 flex flex-wrap items-center justify-between gap-3">
         <button
@@ -82,8 +133,8 @@ export function LocationPicker({
         </button>
 
         <span className="text-xs font-semibold text-slate-500">
-          {coordinates
-            ? `Selected: ${coordinates.lat.toFixed(4)}, ${coordinates.lon.toFixed(4)}`
+          {activeCoordinates
+            ? `Selected: ${activeCoordinates.lat.toFixed(4)}, ${activeCoordinates.lon.toFixed(4)}`
             : "Click on map or drag marker to set exact location"}
         </span>
       </div>
@@ -94,8 +145,8 @@ export function LocationPicker({
 
       <div className="mt-3">
         <MapPicker
-          coordinates={coordinates}
-          onChange={handleCoordsChange}
+          coordinates={activeCoordinates}
+          onChange={(coords) => handleCoordsChange(coords, true)}
         />
       </div>
     </div>

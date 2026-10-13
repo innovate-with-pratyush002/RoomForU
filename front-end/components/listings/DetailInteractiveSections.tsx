@@ -12,6 +12,12 @@ interface DetailInteractiveSectionsProps {
   title: string;
   location: string;
   initialReviews: Review[];
+  currentUser?: {
+    id?: string;
+    _id?: string;
+    username?: string;
+    name?: string;
+  } | null;
 }
 
 export function DetailInteractiveSections({
@@ -20,6 +26,7 @@ export function DetailInteractiveSections({
   title,
   location,
   initialReviews,
+  currentUser,
 }: DetailInteractiveSectionsProps) {
   const [reviews, setReviews] = useState<Review[]>(initialReviews || []);
   const [rating, setRating] = useState(3);
@@ -40,7 +47,13 @@ export function DetailInteractiveSections({
 
     try {
       const newReview = await api.listings.addReview(listingId, { rating, comment });
-      setReviews((prev) => [newReview, ...prev]);
+      const currentUserId = currentUser?.id || currentUser?._id;
+      const reviewWithUser: Review = {
+        ...newReview,
+        ownerId: newReview.ownerId || currentUserId,
+        owner: newReview.owner || currentUser?.username || currentUser?.name || "You",
+      };
+      setReviews((prev) => [reviewWithUser, ...prev]);
       setComment("");
       setRating(5);
     } catch (err: any) {
@@ -172,6 +185,18 @@ export function DetailInteractiveSections({
             <div className="grid gap-3.5 sm:grid-cols-2 lg:grid-cols-3">
               {reviews.map((review) => {
                 const reviewId = review.id || review._id || "";
+                const currentUserId = currentUser?.id || currentUser?._id;
+                const reviewOwnerId =
+                  review.ownerId ||
+                  (review.ownerDetails ? (review.ownerDetails.id || review.ownerDetails._id) : null);
+
+                const isReviewOwner = Boolean(
+                  currentUserId &&
+                  ((reviewOwnerId && String(currentUserId) === String(reviewOwnerId)) ||
+                   (currentUser?.username && review.owner && currentUser.username === review.owner) ||
+                   (currentUser?.name && review.owner && currentUser.name === review.owner))
+                );
+
                 return (
                   <article
                     key={reviewId}
@@ -201,18 +226,20 @@ export function DetailInteractiveSections({
                       </p>
                     </div>
 
-                    <div className="mt-3 text-right">
-                      <button
-                        type="button"
-                        onClick={() => handleDeleteReview(reviewId)}
-                        disabled={deletingId === reviewId}
-                        className="inline-flex items-center gap-1 rounded-lg bg-orange-50 px-2.5 py-1 text-xs font-bold text-orange-600 transition hover:bg-orange-100 disabled:opacity-50"
-                        title="Delete review"
-                      >
-                        <Trash2 size={12} />
-                        Delete
-                      </button>
-                    </div>
+                    {isReviewOwner && (
+                      <div className="mt-3 text-right">
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteReview(reviewId)}
+                          disabled={deletingId === reviewId}
+                          className="inline-flex items-center gap-1 rounded-lg bg-orange-50 px-2.5 py-1 text-xs font-bold text-orange-600 transition hover:bg-orange-100 disabled:opacity-50"
+                          title="Delete review"
+                        >
+                          <Trash2 size={12} />
+                          Delete
+                        </button>
+                      </div>
+                    )}
                   </article>
                 );
               })}

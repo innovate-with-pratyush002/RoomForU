@@ -1,2 +1,12 @@
+import { redirect } from "next/navigation";
 import { ListingForm } from "@/components/forms/ListingForm";
-export default function NewListingPage() { return <ListingForm />; }
+import { api } from "@/lib/api";
+
+export default async function NewListingPage() {
+  const auth = await api.auth.getCurrentUser();
+  if (!auth.authenticated || !auth.user) {
+    redirect("/signin?returnTo=/listings/new");
+  }
+
+  return <ListingForm />;
+}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { UploadCloud, CheckCircle, AlertCircle, ArrowLeft, Image as ImageIcon } from "lucide-react";
 import Link from "next/link";
@@ -27,11 +27,89 @@ export function ListingForm({ listing }: ListingFormProps) {
   const [preferredTenant, setPreferredTenant] = useState(listing?.preferredTenant || "Any");
   const [availabilityStatus, setAvailabilityStatus] = useState(listing?.availabilityStatus || "Available");
   const [contact, setContact] = useState(listing?.phone || "");
+  const initLon =
+    listing?.coordinates?.lon ??
+    (listing as any)?.mapCoordinates?.coordinates?.[0] ??
+    77.2090;
+  const initLat =
+    listing?.coordinates?.lat ??
+    (listing as any)?.mapCoordinates?.coordinates?.[1] ??
+    28.6139;
+
   const [location, setLocation] = useState(listing?.location || "");
   const [stateName, setStateName] = useState(listing?.state || "");
   const [coordinates, setCoordinates] = useState<{ lat: number; lon: number } | null>(
-    listing?.coordinates || { lat: 28.6139, lon: 77.2090 }
+    listing ? { lat: initLat, lon: initLon } : { lat: 28.6139, lon: 77.2090 }
   );
+
+  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+    };
+  }, []);
+
+  const forwardGeocode = async (locQuery: string, stateQuery: string) => {
+    const q = [locQuery.trim(), stateQuery.trim()].filter(Boolean).join(", ");
+    if (q.length < 3) return;
+
+    try {
+      const res = await fetch(
+        `https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(q)}`,
+        {
+          headers: { Accept: "application/json" },
+        }
+      );
+      if (!res.ok) return;
+      const data = await res.json();
+      if (Array.isArray(data) && data.length > 0) {
+        const lat = parseFloat(data[0].lat);
+        const lon = parseFloat(data[0].lon);
+        if (!isNaN(lat) && !isNaN(lon)) {
+          setCoordinates({
+            lat: Number(lat.toFixed(6)),
+            lon: Number(lon.toFixed(6)),
+          });
+        }
+      }
+    } catch (err) {
+      console.error("Forward geocode error:", err);
+    }
+  };
+
+  const handleLocationChange = (val: string) => {
+    setLocation(val);
+    if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
+    debounceTimerRef.current = setTimeout(() => {
+      forwardGeocode(val, stateName);
+    }, 700);
+  };
+
+  const handleStateChange = (val: string) => {
+    setStateName(val);
+    if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
+    debounceTimerRef.current = setTimeout(() => {
+      forwardGeocode(location, val);
+    }, 700);
+  };
+
+  const handleAddressResolved = (address: {
+    location: string;
+    state: string;
+    lat: number;
+    lon: number;
+  }) => {
+    if (address.location) {
+      setLocation(address.location);
+    }
+    if (address.state) {
+      setStateName(address.state);
+    }
+    setCoordinates({ lat: address.lat, lon: address.lon });
+  };
 
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(
@@ -305,7 +383,7 @@ export function ListingForm({ listing }: ListingFormProps) {
                   required
                   className={inputStyle}
                   value={location}
-                  onChange={(e) => setLocation(e.target.value)}
+                  onChange={(e) => handleLocationChange(e.target.value)}
                   placeholder="e.g. Sector 62, Near Metro Station"
                 />
               </label>
@@ -316,7 +394,7 @@ export function ListingForm({ listing }: ListingFormProps) {
                   required
                   className={inputStyle}
                   value={stateName}
-                  onChange={(e) => setStateName(e.target.value)}
+                  onChange={(e) => handleStateChange(e.target.value)}
                   placeholder="e.g. Uttar Pradesh"
                 />
               </label>
@@ -325,7 +403,9 @@ export function ListingForm({ listing }: ListingFormProps) {
                 <LocationPicker
                   initialLat={coordinates?.lat}
                   initialLon={coordinates?.lon}
+                  coordinates={coordinates}
                   onChange={(coords) => setCoordinates(coords)}
+                  onAddressResolved={handleAddressResolved}
                 />
               </div>
             </div>

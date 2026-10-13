@@ -7,6 +7,7 @@ const formatUserResponse = (user) => {
     if (!user) return null;
     return {
         id: user._id.toString(),
+        _id: user._id.toString(),
         name: user.name,
         email: user.email,
         username: user.username,

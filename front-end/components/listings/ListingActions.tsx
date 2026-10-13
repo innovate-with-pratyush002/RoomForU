@@ -8,12 +8,17 @@ import { api } from "@/lib/api";
 
 interface ListingActionsProps {
   listingId: string;
+  isOwner?: boolean;
 }
 
-export function ListingActions({ listingId }: ListingActionsProps) {
+export function ListingActions({ listingId, isOwner = false }: ListingActionsProps) {
   const router = useRouter();
   const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  if (!isOwner) {
+    return null;
+  }
 
   const handleDelete = async () => {
     if (!confirm("Are you sure you want to delete this listing? This action cannot be undone.")) {

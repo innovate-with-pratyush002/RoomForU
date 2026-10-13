@@ -17,15 +17,26 @@ const formatListingResponse = (listing) => {
     const lon = doc.mapCoordinates?.coordinates?.[0] ?? 77.2090;
     const lat = doc.mapCoordinates?.coordinates?.[1] ?? 28.6139;
 
+    const ownerId = doc.user?._id ? doc.user._id.toString() : (doc.user ? doc.user.toString() : null);
+
     // Format nested reviews if populated
     const reviews = (doc.reviews || []).map((rev) => {
         if (!rev) return null;
         if (typeof rev === "object" && rev._id) {
+            const revOwnerId = rev.owner?._id ? rev.owner._id.toString() : (rev.owner ? rev.owner.toString() : null);
             return {
                 id: rev._id.toString(),
+                _id: rev._id.toString(),
                 comment: rev.comment,
                 rating: rev.rating,
                 owner: rev.owner?.name || (typeof rev.owner === "string" ? rev.owner : "Anonymous"),
+                ownerId: revOwnerId,
+                ownerDetails: rev.owner && typeof rev.owner === "object" ? {
+                    id: revOwnerId,
+                    _id: revOwnerId,
+                    name: rev.owner.name,
+                    picture: rev.owner.picture
+                } : null,
                 createdAt: rev.createdAt
             };
         }
@@ -35,6 +46,14 @@ const formatListingResponse = (listing) => {
     return {
         ...doc,
         id: doc._id.toString(),
+        userId: ownerId,
+        user: doc.user && typeof doc.user === "object" ? {
+            id: ownerId,
+            _id: ownerId,
+            name: doc.user.name,
+            email: doc.user.email,
+            picture: doc.user.picture
+        } : ownerId,
         image: imageUrl, // String URL expected by frontend components
         imageUrl: imageUrl,
         phone: phone,
@@ -362,9 +381,11 @@ module.exports.createReview = async (req, res, next) => {
             message: "Review added successfully.",
             data: {
                 id: populatedReview._id.toString(),
+                _id: populatedReview._id.toString(),
                 comment: populatedReview.comment,
                 rating: populatedReview.rating,
                 owner: populatedReview.owner?.name || "Anonymous",
+                ownerId: req.user._id.toString(),
                 ownerDetails: populatedReview.owner,
                 createdAt: populatedReview.createdAt
             }

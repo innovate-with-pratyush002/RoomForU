@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { AlertCircle, CheckCircle } from "lucide-react";
@@ -23,6 +23,17 @@ export function AuthForm({ mode }: AuthFormProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [returnToUrl, setReturnToUrl] = useState("/listings");
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const target = params.get("returnTo");
+      if (target && target.startsWith("/")) {
+        setReturnToUrl(target);
+      }
+    }
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -56,7 +67,7 @@ export function AuthForm({ mode }: AuthFormProps) {
 
       setTimeout(() => {
         // Hard refresh so navbar and cookies re-sync across ports
-        window.location.href = "/listings";
+        window.location.href = returnToUrl;
       }, 700);
     } catch (err: any) {
       setError(err?.message || "Authentication failed. Please check your details and try again.");
@@ -158,7 +169,15 @@ export function AuthForm({ mode }: AuthFormProps) {
         <p className="mt-4 text-center text-xs text-slate-600 sm:text-sm">
           {isSignup ? "Already have an account?" : "Don't have an account?"}{" "}
           <Link
-            href={isSignup ? "/signin" : "/signup"}
+            href={
+              isSignup
+                ? returnToUrl !== "/listings"
+                  ? `/signin?returnTo=${encodeURIComponent(returnToUrl)}`
+                  : "/signin"
+                : returnToUrl !== "/listings"
+                ? `/signup?returnTo=${encodeURIComponent(returnToUrl)}`
+                : "/signup"
+            }
             className="font-bold text-teal-700 hover:text-teal-800"
           >
             {isSignup ? "Sign in" : "Sign up"}
@@ -171,7 +190,7 @@ export function AuthForm({ mode }: AuthFormProps) {
 
         {/* Google OAuth Button with official 4-colored SVG */}
         <a
-          href={backendPath("/auth/google")}
+          href={backendPath(`/auth/google${returnToUrl !== "/listings" ? `?returnTo=${encodeURIComponent(returnToUrl)}` : ""}`)}
           aria-label="Continue with Google"
           title="Continue with Google"
           className="mx-auto flex size-12 items-center justify-center rounded-full border border-slate-300/50 bg-[#f8fbff] text-slate-900 shadow-xs transition hover:scale-105 hover:bg-white hover:shadow-md"

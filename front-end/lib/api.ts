@@ -63,6 +63,20 @@ export async function apiFetch<T>(
     headers.set("Content-Type", "application/json");
   }
 
+  // Forward cookies from incoming request when executing in Server Components
+  if (typeof window === "undefined") {
+    try {
+      const { cookies } = await import("next/headers");
+      const cookieStore = await cookies();
+      const cookieHeader = cookieStore.toString();
+      if (cookieHeader && !headers.has("Cookie")) {
+        headers.set("Cookie", cookieHeader);
+      }
+    } catch {
+      // Context without cookies (e.g. build time static evaluation)
+    }
+  }
+
   const response = await fetch(url, {
     ...options,
     headers,

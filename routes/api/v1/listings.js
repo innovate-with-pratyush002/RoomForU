@@ -35,7 +35,7 @@ const uploadListingImage = (req, res, next) => {
 
 // Listings CRUD
 router.get("/", listingController.getAllListings);
-router.get("/:id", listingController.getListingById);
+router.get("/:id", isLoggedIn, listingController.getListingById);
 router.post("/", isLoggedIn, uploadListingImage, listingController.createListing);
 router.put("/:id", isLoggedIn, isUser, uploadListingImage, listingController.updateListing);
 router.patch("/:id", isLoggedIn, isUser, uploadListingImage, listingController.updateListing);

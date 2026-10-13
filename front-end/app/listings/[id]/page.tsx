@@ -1,6 +1,8 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { getListing } from "@/lib/data";
+import { api } from "@/lib/api";
 import { ListingActions } from "@/components/listings/ListingActions";
 import { DetailInteractiveSections } from "@/components/listings/DetailInteractiveSections";
 
@@ -10,7 +12,22 @@ export default async function DetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const listing = await getListing(id);
+
+  // Enforce authentication exactly like EJS router.get("/:id", isLoggedIn, ...)
+  const auth = await api.auth.getCurrentUser();
+  if (!auth.authenticated || !auth.user) {
+    redirect(`/signin?returnTo=${encodeURIComponent(`/listings/${id}`)}`);
+  }
+
+  let listing;
+  try {
+    listing = await getListing(id);
+  } catch (err: any) {
+    if (err?.status === 401) {
+      redirect(`/signin?returnTo=${encodeURIComponent(`/listings/${id}`)}`);
+    }
+    listing = null;
+  }
 
   if (!listing) {
     return (
@@ -36,6 +53,14 @@ export default async function DetailPage({
 
   const coordinates = listing.coordinates || { lat: 28.6139, lon: 77.209 };
   const listingId = listing.id || listing._id || id;
+
+  const currentUserId = auth.user?.id || auth.user?._id;
+  const listingOwnerId =
+    listing.userId ||
+    (typeof listing.user === "object" ? (listing.user?.id || listing.user?._id) : listing.user);
+  const isOwner = Boolean(
+    currentUserId && listingOwnerId && String(currentUserId) === String(listingOwnerId)
+  );
 
   const infoItems = [
     { label: "Location", value: listing.location },
@@ -115,9 +140,9 @@ export default async function DetailPage({
             </div>
           </div>
 
-          {/* Action Buttons (Edit / Delete) */}
+          {/* Action Buttons (Edit / Delete) - Only rendered for listing owner */}
           <div className="mt-4 pt-2">
-            <ListingActions listingId={listingId} />
+            <ListingActions listingId={listingId} isOwner={isOwner} />
           </div>
         </div>
       </section>
@@ -129,6 +154,7 @@ export default async function DetailPage({
         title={listing.title}
         location={listing.location}
         initialReviews={listing.reviews || []}
+        currentUser={auth.user}
       />
     </div>
   );

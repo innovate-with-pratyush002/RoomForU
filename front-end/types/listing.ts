@@ -2,6 +2,7 @@ export interface Review {
   id: string;
   _id?: string;
   owner: string;
+  ownerId?: string;
   rating: number;
   comment: string;
   createdAt?: string;
@@ -16,6 +17,7 @@ export interface Review {
 export interface Listing {
   id: string;
   _id?: string;
+  userId?: string;
   title: string;
   description: string;
   image: string;
@@ -47,6 +49,7 @@ export interface Listing {
 
 export interface User {
   id: string;
+  _id?: string;
   name: string;
   email: string;
   username: string;
