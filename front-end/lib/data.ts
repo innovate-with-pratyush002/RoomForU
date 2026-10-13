@@ -1,9 +1,43 @@
-import { Listing } from "@/types/listing";
+import { api } from "@/lib/api";
+import type { Listing, ListingFilters } from "@/types/listing";
 
-export const listings: Listing[] = [
-  { id: "noida-pg", title: "Single PG near Noida Sector 62 Metro", description: "A bright, secure room close to the metro with a peaceful study-friendly setting.", image: "https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?auto=format&fit=crop&w=1000&q=85", price: 4500, location: "Sector 62, Noida", state: "Uttar Pradesh", roomType: "Single", preferredTenant: "Boys", availabilityStatus: "Available", phone: "9876543210", owner: "Pratyush", coordinates: { lat: 28.6271, lon: 77.3649 }, reviews: [{ id: "r1", owner: "Aarav", rating: 5, comment: "Very clean room and a convenient location for students." }] },
-  { id: "cyber-city", title: "Single PG near Noida Sector 62 Metro", description: "Comfortable student accommodation with everything needed for an easy daily routine.", image: "https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=1000&q=85", price: 5359, location: "DLF Cyber City, Gurugram", state: "Haryana", roomType: "Double", preferredTenant: "Any", availabilityStatus: "Available", phone: "9876543210", owner: "Ananya", coordinates: { lat: 28.4949, lon: 77.0897 }, reviews: [] },
-  { id: "du-north", title: "Budget PG near DU North Campus", description: "A comfortable, low-budget PG ideal for DU students near North Campus.", image: "https://images.unsplash.com/photo-1596394516093-501ba68a0ba6?auto=format&fit=crop&w=1000&q=85", price: 4867, location: "Kamla Nagar, Delhi", state: "Delhi", roomType: "Shared", preferredTenant: "Boys", availabilityStatus: "Available", phone: "9876543210", owner: "Rohit", coordinates: { lat: 28.681, lon: 77.2043 }, reviews: [] },
-  { id: "whitefield", title: "Single Room near Whitefield IT Park", description: "A quiet, fully furnished room close to Whitefield's IT hubs.", image: "https://images.unsplash.com/photo-1540518614846-7eded433c457?auto=format&fit=crop&w=1000&q=85", price: 3972, location: "Whitefield, Bengaluru", state: "Karnataka", roomType: "Single", preferredTenant: "Any", availabilityStatus: "Available", phone: "9876543210", owner: "Meera", coordinates: { lat: 12.9698, lon: 77.7499 }, reviews: [] }
-];
-export const getListing = (id: string) => listings.find((listing) => listing.id === id) ?? listings[0];
+/**
+ * Fetch all listings from MongoDB via REST API with optional filtering, search, and pagination.
+ */
+export async function getListings(filters: ListingFilters = {}): Promise<{
+  listings: Listing[];
+  total: number;
+  page: number;
+  totalPages: number;
+}> {
+  try {
+    const res = await api.listings.getAll(filters);
+    return {
+      listings: res.data || [],
+      total: res.total || 0,
+      page: res.page || 1,
+      totalPages: res.totalPages || 1,
+    };
+  } catch (error) {
+    console.error("Failed to fetch listings from backend API:", error);
+    return {
+      listings: [],
+      total: 0,
+      page: 1,
+      totalPages: 1,
+    };
+  }
+}
+
+/**
+ * Fetch a single listing by its ID from MongoDB via REST API.
+ */
+export async function getListing(id: string): Promise<Listing | null> {
+  try {
+    if (!id) return null;
+    return await api.listings.getById(id);
+  } catch (error) {
+    console.error(`Failed to fetch listing with id ${id} from API:`, error);
+    return null;
+  }
+}

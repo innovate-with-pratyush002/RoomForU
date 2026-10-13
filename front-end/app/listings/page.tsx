@@ -1,4 +1,253 @@
 import Link from "next/link";
+import { SlidersHorizontal, Building2, ChevronLeft, ChevronRight, X } from "lucide-react";
 import { ListingCard } from "@/components/listings/ListingCard";
-import { listings } from "@/lib/data";
-export default function ListingsPage() { return <div className="mx-auto max-w-[1460px] px-5 pt-4 pb-16"><section className="relative flex min-h-[407px] items-end overflow-hidden rounded-[28px] bg-[linear-gradient(90deg,rgba(7,29,38,.82),rgba(7,29,38,.62)_42%,rgba(7,29,38,.28)),url('/images/home.png')] bg-cover bg-center p-7 shadow-[0_24px_60px_rgba(15,118,110,.14)]"><div className="relative max-w-2xl text-white"><span className="inline-flex rounded-full border border-white/25 bg-white/10 px-3 py-1.5 text-xs font-semibold backdrop-blur">Student housing made simple</span><h1 className="mt-3 max-w-[650px] text-4xl leading-[1.15] font-extrabold tracking-tight">Find a room that feels right for your daily life</h1><p className="mt-3 max-w-xl text-sm leading-relaxed text-white/85">Browse affordable student rooms and guest houses with clear pricing, better visuals, and easy location details.</p><div className="mt-4 flex flex-wrap gap-3"><a href="#top-picks" className="rounded-xl bg-white px-4 py-3 text-sm font-semibold text-teal-700 shadow-lg">Explore Listings</a><Link href="/listings/new" className="rounded-xl border border-white/45 bg-white/10 px-4 py-3 text-sm font-semibold">Add New Listing</Link></div><div className="mt-3 max-w-60 rounded-2xl bg-white/90 p-3 text-slate-800 shadow-xl"><p className="text-sm font-bold">Simple search, modern feel</p><p className="mt-1 text-xs leading-relaxed text-slate-600">Choose by location, compare monthly rent, and open details in one click.</p></div></div></section><section id="top-picks" className="mt-[74px]"><div className="mb-4 flex flex-col justify-between gap-3 sm:flex-row sm:items-end"><div><p className="text-xs font-semibold tracking-widest text-teal-700 uppercase">Home page collection</p><h2 className="mt-1 text-3xl font-extrabold text-slate-900">Top Picks for You</h2></div><p className="max-w-md text-sm leading-relaxed text-slate-600">Fresh listings with simple pricing and location details, so users can quickly compare and choose a place without confusion.</p></div><div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">{listings.map((listing) => <ListingCard key={listing.id} listing={listing} />)}</div></section></div>; }
+import { getListings } from "@/lib/data";
+import type { ListingFilters } from "@/types/listing";
+
+interface PageProps {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}
+
+export default async function ListingsPage({ searchParams }: PageProps) {
+  const rawParams = await searchParams;
+
+  const search = typeof rawParams.search === "string" ? rawParams.search : undefined;
+  const roomType = typeof rawParams.roomType === "string" ? rawParams.roomType : undefined;
+  const preferredTenant = typeof rawParams.preferredTenant === "string" ? rawParams.preferredTenant : undefined;
+  const sort = typeof rawParams.sort === "string" ? rawParams.sort : "newest";
+  const page = typeof rawParams.page === "string" ? parseInt(rawParams.page, 10) || 1 : 1;
+
+  const filters: ListingFilters = {
+    search,
+    roomType,
+    preferredTenant,
+    sort,
+    page,
+    limit: 12,
+  };
+
+  const { listings, total, totalPages } = await getListings(filters);
+
+  // Helper to build filter query string
+  const createQueryUrl = (updates: Record<string, string | undefined>) => {
+    const current = new URLSearchParams();
+    if (search) current.set("search", search);
+    if (roomType) current.set("roomType", roomType);
+    if (preferredTenant) current.set("preferredTenant", preferredTenant);
+    if (sort && sort !== "newest") current.set("sort", sort);
+    if (page > 1) current.set("page", String(page));
+
+    Object.entries(updates).forEach(([key, val]) => {
+      if (!val || val === "all") {
+        current.delete(key);
+      } else {
+        current.set(key, val);
+      }
+    });
+
+    const str = current.toString();
+    return `/listings${str ? `?${str}` : ""}`;
+  };
+
+  const roomTypes = ["Single", "Double", "Shared"];
+  const tenantTypes = ["Boys", "Girls", "Any"];
+
+  const hasActiveFilters = Boolean(search || roomType || preferredTenant || (sort && sort !== "newest"));
+
+  return (
+    <div className="mx-auto max-w-[1460px] px-4 pt-4 pb-16 sm:px-6">
+      {/* Hero Banner */}
+      <section className="relative flex min-h-[380px] items-end overflow-hidden rounded-[28px] bg-[linear-gradient(90deg,rgba(7,29,38,.85),rgba(7,29,38,.65)_45%,rgba(7,29,38,.3)),url('/images/home.png')] bg-cover bg-center p-6 shadow-[0_24px_60px_rgba(15,118,110,.14)] sm:p-8">
+        <div className="relative max-w-2xl text-white">
+          <span className="inline-flex rounded-full border border-white/25 bg-white/10 px-3 py-1.5 text-xs font-semibold backdrop-blur-xs">
+            Verified Student & Working Professional Stays
+          </span>
+          <h1 className="mt-3 max-w-[650px] text-3xl leading-[1.15] font-extrabold tracking-tight sm:text-5xl">
+            Find a room that feels right for your daily life
+          </h1>
+          <p className="mt-3 max-w-xl text-sm leading-relaxed text-white/90 sm:text-base">
+            Browse student rooms and guest houses with transparent monthly rent, clear photos, verified tenant preferences, and precise location map pins.
+          </p>
+
+          <div className="mt-5 flex flex-wrap gap-3">
+            <a
+              href="#listings-feed"
+              className="rounded-xl bg-white px-5 py-3 text-sm font-bold text-teal-800 shadow-md transition hover:bg-slate-100"
+            >
+              Explore {total > 0 ? `${total} Rooms` : "Listings"}
+            </a>
+            <Link
+              href="/listings/new"
+              className="rounded-xl border border-white/45 bg-white/10 px-5 py-3 text-sm font-semibold backdrop-blur-xs transition hover:bg-white/20"
+            >
+              + Add New Listing
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* Main Filter Section */}
+      <section id="listings-feed" className="mt-10">
+        <div className="rounded-[24px] border border-slate-200/80 bg-white p-4 shadow-sm sm:px-6 sm:py-4">
+          {/* Filter Pills and Sort Bar */}
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="flex items-center gap-1 text-xs font-bold tracking-wider text-slate-500 uppercase">
+                <SlidersHorizontal size={13} /> Room:
+              </span>
+              <Link
+                href={createQueryUrl({ roomType: undefined, page: "1" })}
+                className={`rounded-full px-3 py-1 text-xs font-semibold transition ${
+                  !roomType
+                    ? "bg-teal-700 text-white"
+                    : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                }`}
+              >
+                All
+              </Link>
+              {roomTypes.map((type) => (
+                <Link
+                  key={type}
+                  href={createQueryUrl({ roomType: type, page: "1" })}
+                  className={`rounded-full px-3 py-1 text-xs font-semibold transition ${
+                    roomType === type
+                      ? "bg-teal-700 text-white"
+                      : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                  }`}
+                >
+                  {type}
+                </Link>
+              ))}
+
+              <span className="ml-2 flex items-center gap-1 text-xs font-bold tracking-wider text-slate-500 uppercase">
+                Tenant:
+              </span>
+              <Link
+                href={createQueryUrl({ preferredTenant: undefined, page: "1" })}
+                className={`rounded-full px-3 py-1 text-xs font-semibold transition ${
+                  !preferredTenant
+                    ? "bg-teal-700 text-white"
+                    : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                }`}
+              >
+                All
+              </Link>
+              {tenantTypes.map((tenant) => (
+                <Link
+                  key={tenant}
+                  href={createQueryUrl({ preferredTenant: tenant, page: "1" })}
+                  className={`rounded-full px-3 py-1 text-xs font-semibold transition ${
+                    preferredTenant === tenant
+                      ? "bg-teal-700 text-white"
+                      : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                  }`}
+                >
+                  {tenant}
+                </Link>
+              ))}
+            </div>
+
+            <div className="flex items-center gap-2">
+              {hasActiveFilters && (
+                <Link
+                  href="/listings"
+                  className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-1.5 text-xs font-bold text-rose-600 hover:bg-rose-100"
+                >
+                  Reset All
+                </Link>
+              )}
+
+              <div className="flex items-center gap-1.5 text-xs">
+                <span className="text-slate-500 font-medium">Sort:</span>
+                <Link
+                  href={createQueryUrl({ sort: sort === "price_asc" ? "price_desc" : sort === "price_desc" ? "newest" : "price_asc" })}
+                  className="rounded-lg bg-slate-100 px-2.5 py-1 font-bold text-slate-700 hover:bg-slate-200"
+                >
+                  {sort === "price_asc" ? "Price: Low to High" : sort === "price_desc" ? "Price: High to Low" : "Newest First"}
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Results Header */}
+        <div className="mt-6 flex flex-col justify-between gap-2 sm:flex-row sm:items-center">
+          <div>
+            <h2 className="text-2xl font-extrabold text-slate-900">
+              {search ? `Search results for "${search}"` : "Available Student Rooms"}
+            </h2>
+            <p className="text-xs font-medium text-slate-500">
+              Showing {listings.length} of {total} verified accommodations
+            </p>
+          </div>
+        </div>
+
+        {/* Listings Grid or Empty State */}
+        {listings.length > 0 ? (
+          <div className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {listings.map((listing) => (
+              <ListingCard key={listing.id || listing._id} listing={listing} />
+            ))}
+          </div>
+        ) : (
+          <div className="mt-8 flex flex-col items-center justify-center rounded-[28px] border border-dashed border-slate-300 bg-white p-12 text-center shadow-xs">
+            <div className="flex size-16 items-center justify-center rounded-2xl bg-teal-50 text-teal-700">
+              <Building2 size={32} />
+            </div>
+            <h3 className="mt-4 text-xl font-bold text-slate-900">No rooms found</h3>
+            <p className="mt-2 max-w-md text-sm text-slate-600">
+              {search
+                ? `We couldn't find any listings matching "${search}". Try searching another area or city.`
+                : "No listings match your selected filters. Try broadening your criteria."}
+            </p>
+            <div className="mt-5 flex gap-3">
+              <Link
+                href="/listings"
+                className="rounded-xl bg-teal-700 px-5 py-2.5 text-sm font-bold text-white shadow-sm transition hover:bg-teal-800"
+              >
+                Clear all filters
+              </Link>
+              <Link
+                href="/listings/new"
+                className="rounded-xl border border-slate-300 bg-white px-5 py-2.5 text-sm font-bold text-slate-700 transition hover:bg-slate-50"
+              >
+                Post a new room
+              </Link>
+            </div>
+          </div>
+        )}
+
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="mt-10 flex items-center justify-center gap-3">
+            <Link
+              href={createQueryUrl({ page: String(Math.max(1, page - 1)) })}
+              aria-disabled={page <= 1}
+              className={`flex items-center gap-1 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-bold text-slate-700 shadow-xs transition ${
+                page <= 1 ? "pointer-events-none opacity-40" : "hover:bg-slate-50"
+              }`}
+            >
+              <ChevronLeft size={16} />
+              Previous
+            </Link>
+
+            <span className="text-xs font-bold text-slate-600">
+              Page {page} of {totalPages}
+            </span>
+
+            <Link
+              href={createQueryUrl({ page: String(Math.min(totalPages, page + 1)) })}
+              aria-disabled={page >= totalPages}
+              className={`flex items-center gap-1 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-bold text-slate-700 shadow-xs transition ${
+                page >= totalPages ? "pointer-events-none opacity-40" : "hover:bg-slate-50"
+              }`}
+            >
+              Next
+              <ChevronRight size={16} />
+            </Link>
+          </div>
+        )}
+      </section>
+    </div>
+  );
+}
