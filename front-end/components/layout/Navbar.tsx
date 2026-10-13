@@ -8,31 +8,13 @@ import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
 import type { User } from "@/types/listing";
 
+import { useAuth } from "@/context/AuthContext";
+
 export function Navbar() {
   const router = useRouter();
   const [open, setOpen] = useState(false);
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
-
-  useEffect(() => {
-    let isMounted = true;
-    api.auth
-      .getCurrentUser()
-      .then((res) => {
-        if (isMounted && res.authenticated && res.user) {
-          setUser(res.user);
-        }
-      })
-      .catch(() => {})
-      .finally(() => {
-        if (isMounted) setLoading(false);
-      });
-
-    return () => {
-      isMounted = false;
-    };
-  }, []);
+  const { user, loading, logout } = useAuth();
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -45,14 +27,8 @@ export function Navbar() {
   };
 
   const handleLogout = async () => {
-    try {
-      await api.auth.logout();
-      setUser(null);
-      setOpen(false);
-      window.location.href = "/listings";
-    } catch {
-      window.location.href = "/listings";
-    }
+    setOpen(false);
+    await logout("/signin");
   };
 
   const navLinks = [

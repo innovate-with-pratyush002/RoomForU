@@ -5,9 +5,11 @@ import Link from "next/link";
 import { UserCheck, Calendar, Mail, Building, PlusCircle, AlertCircle, LogIn } from "lucide-react";
 import { api } from "@/lib/api";
 import { ListingCard } from "@/components/listings/ListingCard";
+import { useAuth } from "@/context/AuthContext";
 import type { Listing, User } from "@/types/listing";
 
 export default function ProfilePage() {
+  const { user: authUser, loading: authLoading } = useAuth();
   const [user, setUser] = useState<User | null>(null);
   const [listings, setListings] = useState<Listing[]>([]);
   const [loading, setLoading] = useState(true);
@@ -17,12 +19,19 @@ export default function ProfilePage() {
   useEffect(() => {
     let isMounted = true;
 
+    if (!authLoading && !authUser) {
+      setUnauthenticated(true);
+      setLoading(false);
+      return;
+    }
+
     async function loadProfile() {
       try {
         const data = await api.profile.get();
         if (isMounted) {
           setUser(data.user);
           setListings(data.listings || []);
+          setUnauthenticated(false);
         }
       } catch (err: any) {
         if (isMounted) {
@@ -42,7 +51,7 @@ export default function ProfilePage() {
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [authUser, authLoading]);
 
   const handleDeleteListing = async (listingId: string) => {
     if (!confirm("Are you sure you want to delete this listing?")) return;

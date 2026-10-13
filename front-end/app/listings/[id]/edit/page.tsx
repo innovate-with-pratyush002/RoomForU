@@ -3,6 +3,9 @@ import { ListingForm } from "@/components/forms/ListingForm";
 import { getListing } from "@/lib/data";
 import { api } from "@/lib/api";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export default async function EditListingPage({
   params,
 }: {

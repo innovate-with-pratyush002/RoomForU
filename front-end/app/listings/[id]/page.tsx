@@ -6,6 +6,9 @@ import { api } from "@/lib/api";
 import { ListingActions } from "@/components/listings/ListingActions";
 import { DetailInteractiveSections } from "@/components/listings/DetailInteractiveSections";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export default async function DetailPage({
   params,
 }: {

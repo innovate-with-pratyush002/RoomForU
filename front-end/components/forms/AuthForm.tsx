@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { AlertCircle, CheckCircle } from "lucide-react";
 import { api } from "@/lib/api";
 import { backendPath } from "@/services/backend";
+import { useAuth, broadcastAuthLogin } from "@/context/AuthContext";
 
 interface AuthFormProps {
   mode: "signin" | "signup";
@@ -14,6 +15,7 @@ interface AuthFormProps {
 export function AuthForm({ mode }: AuthFormProps) {
   const router = useRouter();
   const isSignup = mode === "signup";
+  const { refreshUser } = useAuth();
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -65,10 +67,12 @@ export function AuthForm({ mode }: AuthFormProps) {
         setSuccess("Signed in successfully! Redirecting...");
       }
 
+      await refreshUser();
+      broadcastAuthLogin();
+
       setTimeout(() => {
-        // Hard refresh so navbar and cookies re-sync across ports
-        window.location.href = returnToUrl;
-      }, 700);
+        window.location.replace(returnToUrl);
+      }, 500);
     } catch (err: any) {
       setError(err?.message || "Authentication failed. Please check your details and try again.");
       setLoading(false);

@@ -204,11 +204,21 @@ const csrfProtection = (req, res, next) => {
     next();
 };
 
+// 5. Cache prevention headers for dynamic APIs and authenticated workflows
+const noCacheMiddleware = (req, res, next) => {
+    res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
+    res.setHeader("Pragma", "no-cache");
+    res.setHeader("Expires", "0");
+    res.setHeader("Surrogate-Control", "no-store");
+    next();
+};
+
 module.exports = {
     helmetMiddleware,
     corsMiddleware,
     apiLimiter,
     authLimiter,
     csrfProtection,
+    noCacheMiddleware,
     allowedOrigins
 };

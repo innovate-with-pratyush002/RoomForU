@@ -4,6 +4,9 @@ import { ListingCard } from "@/components/listings/ListingCard";
 import { getListings } from "@/lib/data";
 import type { ListingFilters } from "@/types/listing";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 interface PageProps {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }

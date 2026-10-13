@@ -18,7 +18,8 @@ const wrapAsync = require("./utils/wrapAsync.js");
 const {
     helmetMiddleware,
     corsMiddleware,
-    csrfProtection
+    csrfProtection,
+    noCacheMiddleware
 } = require("./middleware/security.js");
 
 // Error Handlers
@@ -181,6 +182,7 @@ app.use((req, res, next) => {
 
 // 7. Route Handlers
 // 7.1 REST API v1
+app.use("/api", noCacheMiddleware);
 app.use("/api/v1", apiV1Routes);
 
 // 7.2 MVC Web Routes
@@ -188,11 +190,11 @@ app.get("/", wrapAsync(async (req, res) => {
     res.redirect("/listings");
 }));
 
-app.use("/listings", listingsRoute);
-app.use("/listings/:id/reviews", reviewRoute);
+app.use("/listings", noCacheMiddleware, listingsRoute);
+app.use("/listings/:id/reviews", noCacheMiddleware, reviewRoute);
 app.use("/", authenticationRoute);
-app.use("/search", filterAndSearchRoute);
-app.use("/profile", userProfileRoute);
+app.use("/search", noCacheMiddleware, filterAndSearchRoute);
+app.use("/profile", noCacheMiddleware, userProfileRoute);
 
 // 8. Centralized 404 & Error Handling
 app.use(notFoundHandler);
