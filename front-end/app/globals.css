@@ -1,0 +1,7 @@
+@import "tailwindcss";
+
+@theme { --font-sans: "Poppins", ui-sans-serif, system-ui, sans-serif; }
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body { margin: 0; background: #f5f7fb; color: #1f2937; }
+button, input, select, textarea { font: inherit; }

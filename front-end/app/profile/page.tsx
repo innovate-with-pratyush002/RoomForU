@@ -1,0 +1,3 @@
+import { ListingCard } from "@/components/listings/ListingCard";
+import { listings } from "@/lib/data";
+export default function ProfilePage() { return <div className="pb-16"><section className="flex justify-center bg-white px-4 py-10 text-center shadow-[0_10px_30px_rgba(0,0,0,.08)]"><div><h1 className="text-5xl font-extrabold text-[#0695a2] sm:text-7xl">Pratyush</h1><p className="mt-4 text-sm"><strong>Email:</strong> pratyush@example.com</p><p className="mt-2 text-sm"><strong>Joined:</strong> January 1, 2025</p></div></section><section className="mx-auto max-w-[1400px] px-5 pt-10"><div className="grid gap-8 sm:grid-cols-2 xl:grid-cols-3">{listings.slice(0, 2).map((listing) => <ListingCard key={listing.id} listing={listing} profile />)}</div></section></div>; }

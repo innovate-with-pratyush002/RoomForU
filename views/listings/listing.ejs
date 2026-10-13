@@ -1,0 +1,83 @@
+<% layout('layouts/boilerplate') -%>
+<link rel="stylesheet" href="/CSS/listings.css">
+
+<div class="listing-page">
+    <section class="header-container">
+        <div class="hero-overlay"></div>
+
+        <div class="header-text-section">
+            <span class="hero-badge">Student housing made simple</span>
+            <h1 class="main-title">Find a room that feels right for your daily life</h1>
+            <p class="subtitle">Browse affordable student rooms and guest houses with clear pricing, better visuals, and easy location details.</p>
+
+            <div class="hero-actions">
+                <a href="#top-picks" class="hero-primary-button">Explore Listings</a>
+                <a href="/listings/new" class="hero-secondary-button">Add New Listing</a>
+            </div>
+
+            <div class="hero-bottom-row">
+                <div class="hero-highlights">
+                    <div class="highlight-box">
+                        <span class="highlight-number"><%= allListings.length %>+</span>
+                        <span class="highlight-label">Available listings</span>
+                    </div>
+                    <div class="highlight-box">
+                        <span class="highlight-number">Easy</span>
+                        <span class="highlight-label">Quick browsing</span>
+                    </div>
+                    <div class="highlight-box">
+                        <span class="highlight-number">Safe</span>
+                        <span class="highlight-label">Student focused</span>
+                    </div>
+                </div>
+
+                <div class="hero-info-card">
+                    <p class="hero-info-title">Simple search, modern feel</p>
+                    <p class="hero-info-text">Choose by location, compare monthly rent, and open details in one click.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="listing-section" id="top-picks">
+        <div class="section-heading">
+            <div>
+                <p class="section-tag">Home page collection</p>
+                <h1 class="title">Top Picks for You</h1>
+            </div>
+            <p class="section-description">Fresh listings with simple pricing and location details, so users can quickly compare and choose a place without confusion.</p>
+        </div>
+
+        <div class="card-grid">
+            <% allListings.forEach((list) => { %>
+            <a href="/listings/<%= list._id %>" class="card-link">
+                <article class="rental-card">
+                    <div class="card-image-wrapper">
+                        <img class="card-image" src="<%= list.image?.url || '/images/default.jpg' %>" alt="<%= list.title %>">
+                        <div class="image-overlay"></div>
+                        <span class="card-badge">Student Friendly</span>
+                    </div>
+
+                    <div class="card-content">
+                        <div class="card-text-group">
+                            <h2 class="card-title"><%= list.title %></h2>
+                            <p class="card-location"><i class="fas fa-map-marker-alt"></i> <%= list.location %>, <%= list.state %></p>
+                        </div>
+
+                        <div class="card-footer-row">
+                            <div class="card-price-container">
+                                <span class="card-price">₹ <%= (list.price && typeof list.price === 'number') ? list.price.toLocaleString("en-IN") : "N/A" %></span>
+                                <span class="price-unit">/month</span>
+                            </div>
+                            <span class="view-details">View Details</span>
+                        </div>
+                    </div>
+                </article>
+            </a>
+            <% }) %>
+        </div>
+    </section>
+</div>
+
+<!-- NAA KISI KE SAATH KI UMMID, NAA HI KISI KA SAHAANA CHAHIE.
+     HAM THE ISS SAFAR ME AKELE AB NAA SAATH TUMHARA CHAHIE. -->

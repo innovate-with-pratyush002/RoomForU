@@ -1,0 +1,563 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap');
+
+body {
+    font-family: 'Poppins', sans-serif;
+    background-color: #f5f7fb;
+    color: #0f172a;
+}
+
+.detailPage {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding-top: 14px;
+    padding-right: 20px;
+    padding-bottom: 40px;
+    padding-left: 20px;
+}
+
+/* top section */
+.topSection {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 16px;
+}
+
+.imageBox {
+    position: relative;
+    min-height: 430px;
+    overflow: hidden;
+    border-radius: 28px;
+    background-color: #ffffff;
+    border: 1px solid rgba(148, 163, 184, 0.18);
+    box-shadow: 0 20px 45px rgba(15, 23, 42, 0.08);
+}
+
+.mainImage {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.statusBadge {
+    position: absolute;
+    top: 16px;
+    left: 16px;
+    padding-top: 8px;
+    padding-right: 14px;
+    padding-bottom: 8px;
+    padding-left: 14px;
+    border-radius: 999px;
+    background-color: rgba(255, 255, 255, 0.95);
+    color: #0f766e;
+    font-size: 14px;
+    font-weight: 700;
+    box-shadow: 0 10px 20px rgba(15, 23, 42, 0.12);
+}
+
+.infoSection {
+    padding-top: 18px;
+    padding-right: 18px;
+    padding-bottom: 18px;
+    padding-left: 18px;
+    border-radius: 28px;
+    background-color: rgba(255, 255, 255, 0.94);
+    border: 1px solid rgba(148, 163, 184, 0.18);
+    box-shadow: 0 20px 45px rgba(15, 23, 42, 0.08);
+}
+
+.pageTag {
+    margin-top: 0;
+    margin-right: 0;
+    margin-bottom: 8px;
+    margin-left: 0;
+    color: #0f766e;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+
+.mainTitle {
+    margin-top: 0;
+    margin-right: 0;
+    margin-bottom: 10px;
+    margin-left: 0;
+    font-size: 36px;
+    line-height: 1.15;
+    font-weight: 800;
+    color: #0f172a;
+}
+
+.descText {
+    margin-top: 0;
+    margin-right: 0;
+    margin-bottom: 16px;
+    margin-left: 0;
+    font-size: 15px;
+    line-height: 1.7;
+    color: #5b6b82;
+}
+
+.topInfoRow {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin-bottom: 14px;
+}
+
+.priceBox,
+.ownerBox {
+    padding-top: 16px;
+    padding-right: 16px;
+    padding-bottom: 16px;
+    padding-left: 16px;
+    border-radius: 22px;
+    background-color: #ffffff;
+    border: 1px solid rgba(20, 184, 166, 0.16);
+}
+
+.smallLabel {
+    margin-top: 0;
+    margin-right: 0;
+    margin-bottom: 6px;
+    margin-left: 0;
+    color: #0f766e;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+
+.priceText {
+    margin-top: 0;
+    margin-right: 0;
+    margin-bottom: 0;
+    margin-left: 0;
+    color: #059669;
+    font-size: 30px;
+    font-weight: 800;
+    line-height: 1;
+}
+
+.priceText span {
+    margin-left: 4px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #5b6b82;
+}
+
+.ownerText {
+    margin-top: 0;
+    margin-right: 0;
+    margin-bottom: 0;
+    margin-left: 0;
+    color: #0f172a;
+    font-size: 16px;
+    font-weight: 700;
+}
+
+.infoGrid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+}
+
+.infoItem {
+    min-height: 88px;
+    padding-top: 14px;
+    padding-right: 14px;
+    padding-bottom: 14px;
+    padding-left: 14px;
+    border-radius: 20px;
+    background-color: #ffffff;
+    border: 1px solid rgba(148, 163, 184, 0.18);
+}
+
+.infoHeading {
+    margin-top: 0;
+    margin-right: 0;
+    margin-bottom: 6px;
+    margin-left: 0;
+    color: #0f766e;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+
+.infoText {
+    margin-top: 0;
+    margin-right: 0;
+    margin-bottom: 0;
+    margin-left: 0;
+    color: #0f172a;
+    font-size: 14px;
+    line-height: 1.5;
+    word-break: break-word;
+}
+
+.buttonRow {
+    display: flex;
+    gap: 12px;
+    margin-top: 14px;
+}
+
+.deleteForm {
+    margin: 0;
+}
+
+/* common buttons */
+.commonBtn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 42px;
+    padding-top: 11px;
+    padding-right: 16px;
+    padding-bottom: 11px;
+    padding-left: 16px;
+    border: none;
+    border-radius: 14px;
+    text-decoration: none;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 700;
+    transition: transform 0.25s ease, background-color 0.25s ease;
+}
+
+.editBtn,
+.submitBtn {
+    background-color: #0f766e;
+    color: #ffffff;
+}
+
+.editBtn:hover,
+.submitBtn:hover {
+    background-color: #0b5c56;
+    transform: translateY(-2px);
+}
+
+.deleteBtn {
+    background-color: #fff1f2;
+    color: #be123c;
+}
+
+.deleteBtn:hover {
+    background-color: #ffe4e6;
+    transform: translateY(-2px);
+}
+
+/* middle section */
+.bottomSection {
+    display: grid;
+    grid-template-columns: 0.9fr 1.1fr;
+    gap: 16px;
+    align-items: start;
+}
+
+.whiteBox {
+    padding-top: 16px;
+    padding-right: 16px;
+    padding-bottom: 16px;
+    padding-left: 16px;
+    border-radius: 28px;
+    background-color: rgba(255, 255, 255, 0.94);
+    border: 1px solid rgba(148, 163, 184, 0.18);
+    box-shadow: 0 20px 45px rgba(15, 23, 42, 0.08);
+}
+
+.allReviewsSection {
+    margin-top: 16px;
+}
+
+.titleRow {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 12px;
+}
+
+.sectionTitle {
+    margin-top: 0;
+    margin-right: 0;
+    margin-bottom: 0;
+    margin-left: 0;
+    font-size: 22px;
+    font-weight: 800;
+    color: #0f172a;
+}
+
+.sectionNote {
+    margin-top: 0;
+    margin-right: 0;
+    margin-bottom: 0;
+    margin-left: 0;
+    font-size: 13px;
+    color: #5b6b82;
+}
+
+.mapBox {
+    width: 100%;
+    height: 320px;
+    overflow: hidden;
+    border-radius: 22px;
+    background-color: #d8e7e5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #476069;
+}
+
+/* form section */
+.formBox {
+    padding-top: 16px;
+    padding-right: 16px;
+    padding-bottom: 16px;
+    padding-left: 16px;
+    border-radius: 22px;
+    background-color: #f8fbff;
+    border: 1px solid rgba(148, 163, 184, 0.14);
+}
+
+.formTitle {
+    margin-top: 0;
+    margin-right: 0;
+    margin-bottom: 12px;
+    margin-left: 0;
+    font-size: 15px;
+    color: #0f766e;
+}
+
+.reviewForm {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.ratingBox {
+    margin: 0;
+}
+
+.inputGroup {
+    width: 100%;
+}
+
+.textLabel {
+    display: inline-block;
+    margin-bottom: 6px;
+    font-size: 13px;
+    font-weight: 700;
+    color: #0f172a;
+}
+
+.textArea {
+    width: 100%;
+    min-height: 88px;
+    resize: vertical;
+    outline: none;
+    border: 1px solid rgba(148, 163, 184, 0.35);
+    border-radius: 16px;
+    padding-top: 12px;
+    padding-right: 14px;
+    padding-bottom: 12px;
+    padding-left: 14px;
+    font-size: 14px;
+    font-family: inherit;
+    transition: border-color 0.25s ease, box-shadow 0.25s ease;
+}
+
+.textArea:focus {
+    border-color: rgba(15, 118, 110, 0.65);
+    box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.12);
+}
+
+.submitBtn {
+    align-self: flex-start;
+}
+
+/* reviews section */
+.reviewsGrid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+    padding-top: 16px;
+    padding-right: 16px;
+    padding-bottom: 16px;
+    padding-left: 16px;
+    border-radius: 22px;
+    background-color: #f8fbff;
+    border: 1px solid rgba(148, 163, 184, 0.14);
+}
+
+.reviewItem {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    padding-top: 14px;
+    padding-right: 14px;
+    padding-bottom: 14px;
+    padding-left: 14px;
+    border-radius: 18px;
+    background-color: #ffffff;
+    border: 1px solid rgba(148, 163, 184, 0.14);
+    box-shadow: 0 10px 20px rgba(15, 23, 42, 0.04);
+}
+
+.reviewTop {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 8px;
+}
+
+.userName {
+    margin-top: 0;
+    margin-right: 0;
+    margin-bottom: 0;
+    margin-left: 0;
+    font-size: 14px;
+    font-weight: 700;
+    color: #0f172a;
+}
+
+.reviewText {
+    margin-top: 0;
+    margin-right: 0;
+    margin-bottom: 10px;
+    margin-left: 0;
+    color: #5b6b82;
+    font-size: 13px;
+    line-height: 1.5;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+    overflow: hidden;
+}
+
+.deleteReviewForm {
+    margin-top: auto;
+    text-align: right;
+}
+
+.smallDeleteBtn {
+    min-height: 34px;
+    padding-top: 8px;
+    padding-right: 12px;
+    padding-bottom: 8px;
+    padding-left: 12px;
+    border-radius: 10px;
+    background-color: #fff7ed;
+    color: #f97316;
+    font-size: 12px;
+}
+
+.smallDeleteBtn:hover {
+    background-color: #ffedd5;
+}
+
+.noReviews {
+    grid-column: 1 / -1;
+    margin-top: 0;
+    margin-right: 0;
+    margin-bottom: 0;
+    margin-left: 0;
+    text-align: center;
+    color: #5b6b82;
+    font-size: 14px;
+    font-style: italic;
+}
+
+/* responsive */
+@media (max-width: 1100px) {
+    .topSection {
+        grid-template-columns: 1fr;
+    }
+
+    .bottomSection {
+        grid-template-columns: 1fr;
+    }
+
+    .infoGrid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .reviewsGrid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .imageBox {
+        min-height: 360px;
+    }
+}
+
+@media (max-width: 768px) {
+    .detailPage {
+        padding-top: 12px;
+        padding-right: 16px;
+        padding-bottom: 32px;
+        padding-left: 16px;
+    }
+
+    .mainTitle {
+        font-size: 30px;
+    }
+
+    .topInfoRow {
+        grid-template-columns: 1fr;
+    }
+
+    .infoGrid {
+        grid-template-columns: 1fr;
+    }
+
+    .reviewsGrid {
+        grid-template-columns: 1fr;
+    }
+
+    .titleRow {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .imageBox {
+        min-height: 300px;
+    }
+
+    .mapBox {
+        height: 280px;
+    }
+}
+
+@media (max-width: 480px) {
+    .detailPage {
+        padding-top: 10px;
+        padding-right: 12px;
+        padding-bottom: 28px;
+        padding-left: 12px;
+    }
+
+    .mainTitle {
+        font-size: 26px;
+    }
+
+    .buttonRow {
+        flex-direction: column;
+    }
+
+    .commonBtn,
+    .deleteForm {
+        width: 100%;
+    }
+
+    .imageBox {
+        min-height: 250px;
+    }
+
+    .mapBox {
+        height: 240px;
+    }
+}

@@ -1,0 +1,2 @@
+export interface Review { id: string; owner: string; rating: number; comment: string }
+export interface Listing { id: string; title: string; description: string; image: string; price: number; location: string; state: string; roomType: "Single" | "Double" | "Shared"; preferredTenant: "Boys" | "Girls" | "Any"; availabilityStatus: "Available" | "Booked"; phone: string; owner: string; coordinates: { lat: number; lon: number }; reviews: Review[] }

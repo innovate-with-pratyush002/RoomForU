@@ -1,0 +1,167 @@
+<% layout('layouts/boilerplate') -%>
+<link rel="stylesheet" href="/CSS/addlisting.css">
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+
+<section class="addListingPage">
+  <div class="addListingShell">
+    <section class="formSection">
+      <div class="sectionIntro">
+        <p class="sectionTag">Single page listing form</p>
+        <h2 class="sectionTitle">Add your room details</h2>
+        <p class="sectionText">
+          Fill every field carefully. The map will help you save the exact location so users can understand where the room is.
+        </p>
+      </div>
+
+      <form class="listingForm" method="POST" action="/listings" enctype="multipart/form-data">
+        <div class="formFlow">
+          <div class="flowSection">
+            <div class="sectionHeader">
+              <h3 class="flowTitle">Basic details</h3>
+              <p class="flowText">Start with the main information students notice first.</p>
+            </div>
+
+            <div class="fieldGrid">
+              <div class="fieldGroup fieldGroupWide">
+                <label class="fieldLabel" for="title">Listing title</label>
+                <input class="fieldInput" type="text" id="title" name="place[title]" placeholder="Example: Clean PG Room Near BHU Gate" required>
+              </div>
+
+              <div class="fieldGroup fieldGroupWide">
+                <label class="fieldLabel" for="description">Description</label>
+                <textarea class="fieldTextarea" id="description" name="place[description]" rows="4" placeholder="Write room size, furniture, nearby colleges, food options, safety, and anything else helpful." required></textarea>
+              </div>
+
+              <div class="fieldGroup">
+                <label class="fieldLabel" for="image">Room image</label>
+                <input class="fieldInput fieldInputFile" type="file" id="image" name="place[image]" required>
+              </div>
+
+              <div class="fieldGroup">
+                <label class="fieldLabel" for="price">Monthly price</label>
+                <input class="fieldInput" type="number" id="price" name="place[price]" placeholder="Example: 6500" min="0" required>
+              </div>
+            </div>
+          </div>
+
+          <div class="flowSection">
+            <div class="sectionHeader">
+              <h3 class="flowTitle">Room preferences</h3>
+              <p class="flowText">Choose the type of room and who can stay there.</p>
+            </div>
+
+            <div class="fieldGrid">
+              <div class="fieldGroup">
+                <label class="fieldLabel" for="roomType">Room type</label>
+                <select class="fieldSelect" id="roomType" name="place[roomType]" required>
+                  <option value="">Select room type</option>
+                  <option value="Single">Single</option>
+                  <option value="Double">Double</option>
+                  <option value="Shared">Shared</option>
+                </select>
+              </div>
+
+              <div class="fieldGroup">
+                <label class="fieldLabel" for="preferredTenant">Preferred tenant</label>
+                <select class="fieldSelect" id="preferredTenant" name="place[preferredTenant]" required>
+                  <option value="">Select tenant type</option>
+                  <option value="Boys">Boys</option>
+                  <option value="Girls">Girls</option>
+                  <option value="Any">Any</option>
+                </select>
+              </div>
+
+              <div class="fieldGroup">
+                <label class="fieldLabel" for="availabilityStatus">Availability</label>
+                <select class="fieldSelect" id="availabilityStatus" name="place[availabilityStatus]">
+                  <option value="Available">Available</option>
+                  <option value="Booked">Booked</option>
+                </select>
+              </div>
+
+              <div class="fieldGroup">
+                <label class="fieldLabel" for="contact">Phone number</label>
+                <input class="fieldInput" type="text" id="contact" name="place[contact]" placeholder="Example: 9876543210" required>
+              </div>
+            </div>
+          </div>
+
+          <div class="flowSection">
+            <div class="sectionHeader">
+              <h3 class="flowTitle">Location details</h3>
+              <p class="flowText">Type the address or use your current location, then adjust the pin if needed.</p>
+            </div>
+
+            <div class="fieldGrid">
+              <div class="fieldGroup fieldGroupWide">
+                <label class="fieldLabel" for="location">Full address</label>
+                <input class="fieldInput" type="text" id="location" name="place[location]" placeholder="Example: Lanka Road, near main market" required>
+              </div>
+
+              <div class="fieldGroup">
+                <label class="fieldLabel" for="state">State</label>
+                <input class="fieldInput" type="text" id="state" name="place[state]" placeholder="Example: Uttar Pradesh" required>
+              </div>
+            </div>
+
+            <input type="hidden" name="place[lat]" id="lat">
+            <input type="hidden" name="place[lon]" id="lon">
+
+            <div class="mapToolbar">
+              <button class="locationButton" type="button" id="locateBtn">Use My Current Location</button>
+              <p class="mapHint">You can also click anywhere on the map and drag the marker to the exact point.</p>
+            </div>
+
+            <div class="mapFrame">
+              <div id="map" class="mapCanvas"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="submitRow">
+          <button class="submitButton" type="submit">Publish Listing</button>
+        </div>
+      </form>
+    </section>
+  </div>
+</section>
+
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<script src="/js/addlistingMap.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!-- MERE ISHQ KE KISSO ME TU MASHHOOR HAI.
+     TU CHAND HAI MERA, ISSI LIYE TU MUJHSE DOOR HAI. -->

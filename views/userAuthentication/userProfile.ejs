@@ -1,0 +1,65 @@
+<% layout("layouts/boilerplate") %>
+<link rel="stylesheet" href="/CSS/userProfile.css">
+
+<!--  PROFILE SECTION  -->
+<section class="profile-section">
+  <div class="profile-box">
+    <h1 class="profile-name">
+      <%= UserData.name || UserData.username %>
+    </h1>
+
+    <p class="profile-info">
+      <strong>Email:</strong> <%= UserData.email %>
+    </p>
+
+    <p class="profile-info">
+      <strong>Joined:</strong>
+      <%= new Date(UserData.createdAt).toDateString() %>
+    </p>
+  </div>
+</section>
+
+
+
+            <!--  LISTINGS SECTION -->
+<section class="listings-section">
+
+  <% if (!allListings || allListings.length === 0) { %>
+    <p class="no-listings">No listings added yet.</p>
+  <% } else { %>
+
+    <div class="card-grid">
+      <% allListings.forEach(list => { %>
+
+        <a href="/listings/<%= list._id %>" class="card-link">
+          <div class="listing-card">
+
+            <div class="card-img-box">
+              <img
+                src="<%= list.image?.url || '/images/default.jpg' %>"
+                alt="<%= list.title %>"
+              >
+            </div>
+
+            <div class="card-body">
+              <h2 class="card-title"><%= list.title %></h2>
+
+              <p class="card-location">
+                <%= list.location %>, <%= list.state %>
+              </p>
+
+              <p class="card-price">
+                ₹ <%= list.price.toLocaleString("en-IN") %>
+                <span>/month</span>
+              </p>
+            </div>
+
+          </div>
+        </a>
+
+      <% }) %>
+    </div>
+
+  <% } %>
+
+</section>
