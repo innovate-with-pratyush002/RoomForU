@@ -1,46 +1,39 @@
-const express= require("express");
-const wrapAsync= require("../utils/wrapAsync.js");
-const router= express.Router();
-const Registration= require("../models/authentication.js");
-const passport= require("passport");
-const ListingControllers= require("../controller/authentication.js");
+const express = require("express");
+const wrapAsync = require("../utils/wrapAsync.js");
+const router = express.Router();
+const passport = require("passport");
+const ListingControllers = require("../controller/authentication.js");
+const { authLimiter } = require("../middleware/security.js");
 
+// Signup routes
+router.get("/signup", ListingControllers.signUpForm);
+router.post("/signup", authLimiter, wrapAsync(ListingControllers.Signup));
 
-
-
-//signup route
-router.get("/signup",ListingControllers.signUpForm);
-
-router.post("/signup",wrapAsync(ListingControllers.Signup));
-
-
-
-
-// google authentication
-router.get('/auth/google',
-    passport.authenticate('google', { scope: ['profile', 'email'] })
+// Google OAuth routes
+router.get(
+    "/auth/google",
+    passport.authenticate("google", { scope: ["profile", "email"] })
 );
 
-router.get('/auth/google/callback',
-    passport.authenticate('google', { failureRedirect: '/signin' }),
+router.get(
+    "/auth/google/callback",
+    passport.authenticate("google", { failureRedirect: "/signin?error=oauth_failed" }),
     (req, res) => {
-        res.redirect('/listings');
+        res.redirect("/listings");
     }
 );
 
+// Signin routes
+router.get("/signin", ListingControllers.signinForm);
+router.post(
+    "/signin",
+    authLimiter,
+    passport.authenticate("local", { failureRedirect: "/signin", failureFlash: true }),
+    wrapAsync(ListingControllers.SignIn)
+);
 
+// Logout routes
+router.get("/logout", ListingControllers.logout);
+router.post("/logout", ListingControllers.logout);
 
-
-
-//signin route
-router.get("/signin",ListingControllers.signinForm);
-
-router.post("/signin", passport.authenticate("local", { failureRedirect: '/signin',failureFlash:true }),wrapAsync(ListingControllers.SignIn));
-
-
-
-
-//logout route
-router.get('/logout', ListingControllers.logout);
-
-module.exports=router;
+module.exports = router;

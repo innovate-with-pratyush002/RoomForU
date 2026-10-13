@@ -5,8 +5,10 @@
   "name": "studentroomhub",
   "version": "1.0.0",
   "description": "A web platform that helps students find and book affordable rental rooms or guest houses in other cities. Property owners can create accounts and list their accommodations with details like price, location, and size. Built to make the student housing experience easy, reliable, and accessible.",
-  "main": "index.js",
+  "main": "app.js",
   "scripts": {
+    "start": "node app.js",
+    "dev": "nodemon app.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -23,11 +25,15 @@
     "cloudinary": "^1.41.3",
     "connect-flash": "^0.1.1",
     "connect-mongo": "^6.0.0",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.6",
     "dotenv": "^17.2.1",
     "ejs": "^3.1.10",
     "ejs-mate": "^4.0.0",
     "express": "^5.1.0",
+    "express-rate-limit": "^8.7.1",
     "express-session": "^1.18.1",
+    "helmet": "^8.3.0",
     "method-override": "^3.0.0",
     "mongoose": "^8.15.1",
     "mongoose-findorcreate": "^4.0.0",
