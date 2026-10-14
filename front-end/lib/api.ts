@@ -231,5 +231,15 @@ export const api = {
     async get(): Promise<ProfileApiResponse> {
       return await apiFetch<ProfileApiResponse>("/api/v1/profile");
     },
+
+    async deleteAccount(
+      confirmation: string = "DELETE",
+      password?: string
+    ): Promise<{ success: boolean; message: string }> {
+      return await apiFetch<{ success: boolean; message: string }>("/api/v1/profile", {
+        method: "DELETE",
+        body: JSON.stringify({ confirmation, password }),
+      });
+    },
   },
 };

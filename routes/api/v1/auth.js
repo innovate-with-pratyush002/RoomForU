@@ -20,6 +20,11 @@ router.post("/signin", authLimiter, authController.signin);
 router.post("/logout", authController.logout);
 router.get("/logout", authController.logout);
 
+// Delete account alias
+const { isLoggedIn } = require("../../../middleware.js");
+const profileController = require("../../../controller/api/v1/profileController.js");
+router.delete("/account", isLoggedIn, profileController.deleteUserAccount);
+
 // Get currently authenticated session user
 router.get("/current-user", authController.currentUser);
 router.get("/me", authController.currentUser);

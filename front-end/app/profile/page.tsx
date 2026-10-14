@@ -2,19 +2,31 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { UserCheck, Calendar, Mail, Building, PlusCircle, AlertCircle, LogIn } from "lucide-react";
+import {
+  UserCheck,
+  Calendar,
+  Mail,
+  Building,
+  PlusCircle,
+  AlertCircle,
+  LogIn,
+  Trash2,
+  ShieldAlert
+} from "lucide-react";
 import { api } from "@/lib/api";
 import { ListingCard } from "@/components/listings/ListingCard";
+import { DeleteAccountModal } from "@/components/profile/DeleteAccountModal";
 import { useAuth } from "@/context/AuthContext";
 import type { Listing, User } from "@/types/listing";
 
 export default function ProfilePage() {
-  const { user: authUser, loading: authLoading } = useAuth();
+  const { user: authUser, loading: authLoading, logout } = useAuth();
   const [user, setUser] = useState<User | null>(null);
   const [listings, setListings] = useState<Listing[]>([]);
   const [loading, setLoading] = useState(true);
   const [unauthenticated, setUnauthenticated] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
@@ -62,6 +74,11 @@ export default function ProfilePage() {
     } catch (err: any) {
       alert(err?.message || "Failed to delete listing.");
     }
+  };
+
+  const handleDeleteAccount = async (confirmationText: string) => {
+    await api.profile.deleteAccount(confirmationText);
+    await logout("/");
   };
 
   if (loading) {
@@ -126,10 +143,10 @@ export default function ProfilePage() {
 
   const joinDate = user?.createdAt
     ? new Date(user.createdAt).toLocaleDateString("en-IN", {
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-      })
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    })
     : "Verified Member";
 
   return (
@@ -174,13 +191,15 @@ export default function ProfilePage() {
               </div>
             </div>
 
-            <Link
-              href="/listings/new"
-              className="mt-2 inline-flex items-center gap-2 rounded-xl bg-orange-500 px-5 py-2.5 text-xs font-bold text-white shadow-sm transition hover:bg-orange-600"
-            >
-              <PlusCircle size={15} />
-              Add New Listing
-            </Link>
+            <div className="mt-2 flex flex-wrap items-center gap-3">
+              <Link
+                href="/listings/new"
+                className="inline-flex items-center gap-2 rounded-xl bg-orange-500 px-5 py-2.5 text-xs font-bold text-white shadow-sm transition hover:bg-orange-600"
+              >
+                <PlusCircle size={15} />
+                Add New Listing
+              </Link>
+            </div>
           </div>
         </div>
       </section>
@@ -226,6 +245,49 @@ export default function ProfilePage() {
           </div>
         )}
       </section>
+
+      {/* Account Settings / Delete Account Section */}
+      <section className="mx-auto mt-14 max-w-[1400px] px-4 sm:px-6">
+        <div className="rounded-[28px] border border-slate-200/90 bg-white p-6 shadow-sm transition hover:shadow-md sm:p-8">
+          <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
+            <div className="max-w-2xl space-y-1.5">
+              <div className="flex items-center gap-2">
+                <span className="flex size-7 items-center justify-center rounded-lg border border-teal-100 bg-teal-50 text-teal-700">
+                  <ShieldAlert size={16} />
+                </span>
+                <h3 className="text-lg font-bold text-slate-900">Account Management</h3>
+                <span className="rounded-full border border-teal-200/70 bg-teal-50 px-2.5 py-0.5 text-[11px] font-bold text-teal-800">
+                  Irreversible Action
+                </span>
+              </div>
+              <p className="text-sm font-bold text-slate-800">
+                Permanently delete your account and all associated data
+              </p>
+              <p className="text-xs text-slate-500 leading-relaxed">
+                Once deleted, all your profile details, {listings.length} room {listings.length === 1 ? "listing" : "listings"}, all ratings/reviews you submitted, and active sessions will be permanently erased from the database.
+              </p>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setIsDeleteModalOpen(true)}
+              className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-teal-700 px-5 py-3 text-xs font-bold text-white shadow-sm transition hover:bg-teal-800 active:scale-95"
+            >
+              <Trash2 size={15} />
+              Delete Account
+            </button>
+          </div>
+        </div>
+      </section>
+
+      {/* Confirmation Modal */}
+      <DeleteAccountModal
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        onConfirm={handleDeleteAccount}
+        user={user}
+        listingsCount={listings.length}
+      />
     </div>
   );
 }

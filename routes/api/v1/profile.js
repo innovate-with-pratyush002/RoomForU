@@ -6,4 +6,7 @@ const profileController = require("../../../controller/api/v1/profileController.
 // GET /api/v1/profile - Current user profile and created listings
 router.get("/", isLoggedIn, profileController.getUserProfile);
 
+// DELETE /api/v1/profile - Permanently delete current user profile, listings, reviews, and account data
+router.delete("/", isLoggedIn, profileController.deleteUserAccount);
+
 module.exports = router;
