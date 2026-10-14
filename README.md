@@ -2,183 +2,101 @@
 
 RoomForU is a full-stack room rental platform built for students who need to find rooms, PGs, or shared accommodations in other cities. Property owners can create accounts, publish listings with images and pricing details, and manage their properties from a personal profile page.
 
-The project is deployed on Render and uses Node.js, Express, MongoDB, EJS, Passport.js, Cloudinary, and Multer.
+The project features a high-performance **Express REST API backend** and a modern **Next.js frontend**.
 
-## Features
+## Architecture & Tech Stack
 
-- Local authentication with signup and signin
-- Google OAuth login
-- Create, edit, and delete room listings
-- Upload listing images using Cloudinary
-- Store listing coordinates for map-based location data
-- Search listings by title, description, and location
-- Add and delete reviews with ratings
-- User profile page showing posted listings
-- Flash messages for common actions and errors
+### Backend
+- **Node.js & Express 5**
+- **MongoDB & Mongoose**: Connection pooling, lean querying, indexes, and pagination
+- **Passport.js**: Local authentication and Google OAuth 2.0
+- **Cloudinary & Multer**: Cloud media storage and upload limits
+- **Security**: Helmet, CORS origin validation, rate limiting, and CSRF protection
+- **Session**: `express-session` with MongoDB session store (`connect-mongo`)
 
-## Tech Stack
-
-- Node.js
-- Express
-- MongoDB with Mongoose
-- EJS with `ejs-mate`
-- Passport.js
-- Cloudinary
-- Multer
-- Express Session with `connect-mongo`
-- Method Override
-- Connect Flash
+### Frontend
+- **Next.js 15 (App Router)**
+- **React 19 & TypeScript**
+- **Tailwind CSS v4 & Lucide Icons**
+- **Interactive Maps**: Leaflet / OpenStreetMap
 
 ## Project Structure
 
 ```text
-StudentRoomHub/
-├── app.js
-├── cloudConfig.js
+RoomForU/
+├── app.js                      # Express API application entry point
+├── cloudConfig.js              # Cloudinary configuration
 ├── controller/
-├── init/
-├── middleware.js
-├── models/
-├── public/
+│   └── api/
+│       └── v1/                 # API controllers (auth, listings, profile)
+├── middleware/                 # Security, rate limiting, and error handling
+├── middleware.js               # Authentication & authorization guards
+├── models/                     # Mongoose schemas (listing, review, user)
 ├── routes/
-├── utils/
-└── views/
-```
-
-## Deployment
-
-This project is deployed on Render.
-
-If you want to publish your own version, configure these environment variables in Render:
-
-```env
-MONGO_URI=your_mongodb_connection_string
-cloudName=your_cloudinary_cloud_name
-apiKey=your_cloudinary_api_key
-apiSecret=your_cloudinary_api_secret
-GOOGLE_CLIENT_ID=your_google_client_id
-GOOGLE_CLIENT_SECRET=your_google_client_secret
+│   └── api/
+│       └── v1/                 # REST API v1 routes & endpoints
+├── utils/                      # Error & async wrappers
+├── front-end/                  # Next.js frontend application
+│   ├── app/                    # Next.js App Router pages
+│   ├── components/             # Reusable UI components & maps
+│   ├── lib/                    # API client, types, and utilities
+│   └── public/                 # Static assets & images
+└── init/                       # Database seed scripts
 ```
 
 ## Prerequisites
 
 Before running locally, make sure you have:
 
-- Node.js installed
-- MongoDB connection string
-- Cloudinary account
-- Google OAuth credentials for Google login
+- Node.js (v18+)
+- MongoDB connection string (Atlas or local)
+- Cloudinary credentials
+- Google OAuth credentials (optional for Google login)
 
-## Local Installation
+## Getting Started
 
-1. Clone the repository:
-
-```bash
-git clone https://github.com/innovate-with-pratyush002/StudentRoomHub.git
-cd StudentRoomHub
-```
-
-2. Install dependencies:
+### 1. Backend Setup
 
 ```bash
+# Install backend dependencies
 npm install
+
+# Start backend on http://localhost:5000
+npm start
 ```
 
-3. Create a `.env` file in the project root:
-
-```env
-MONGO_URI=your_mongodb_connection_string
-cloudName=your_cloudinary_cloud_name
-apiKey=your_cloudinary_api_key
-apiSecret=your_cloudinary_api_secret
-GOOGLE_CLIENT_ID=your_google_client_id
-GOOGLE_CLIENT_SECRET=your_google_client_secret
-```
-
-4. Start the app:
+### 2. Frontend Setup
 
 ```bash
-node app.js
+cd front-end
+
+# Install frontend dependencies
+npm install
+
+# Start Next.js development server on http://localhost:3000
+npm run dev
 ```
 
-For development:
+## REST API Endpoints (`/api/v1`)
 
-```bash
-npx nodemon app.js
-```
+### Authentication & User
+- `POST /api/v1/auth/signup` - Register a new user
+- `POST /api/v1/auth/signin` - Authenticate with credentials
+- `POST /api/v1/auth/logout` - Clear session and cookies
+- `GET /api/v1/auth/current-user` - Get current session user
+- `GET /api/v1/auth/google` - Initiate Google OAuth
+- `GET /api/v1/profile` - Current user profile and listings
 
-5. Open:
+### Listings
+- `GET /api/v1/listings` - Search and list accommodations (supports filters, pagination, sort)
+- `GET /api/v1/listings/:id` - Accommodation details with reviews and owner
+- `POST /api/v1/listings` - Create a listing (multipart form with image & coordinates)
+- `PUT /api/v1/listings/:id` - Update listing details
+- `DELETE /api/v1/listings/:id` - Remove listing and clean up Cloudinary images
 
-```text
-http://localhost:3000
-```
-
-## Seed Data
-
-Sample listing data is available in [`init/data.js`](./init/data.js).
-
-To seed the database:
-
-```bash
-node init/index.js
-```
-
-Note: the seed script clears the existing `Listing` collection before inserting sample data.
-
-## Main Routes
-
-- `/signup` - create an account
-- `/signin` - sign in with username and password
-- `/auth/google` - sign in with Google
-- `/logout` - log out the current user
-- `/listings` - view all listings
-- `/listings/new` - create a new listing
-- `/listings/:id` - view listing details after login
-- `/listings/:id/edit` - edit a listing if you are the owner
-- `/listings/:id/reviews` - add or delete reviews
-- `/search?search=<query>` - search listings after login
-- `/profile` - view the current user's profile and listings
-
-### Listing
-
-A listing contains:
-
-- title
-- description
-- image metadata
-- price
-- location
-- state
-- room type
-- preferred tenant
-- availability status
-- contact phone number
-- owner reference
-- reviews
-- GeoJSON map coordinates
-
-### Review
-
-A review contains:
-
-- comment
-- rating from 1 to 5
-- owner reference
-- creation timestamp
-
-### UserAuth
-
-A user contains:
-
-- name
-- email
-- username for local authentication
-- optional Google account ID
-- optional profile picture
-
-## Contributing
-
-Contributions are welcome. Read [`CONTRIBUTING.md`](./CONTRIBUTING.md) before opening an issue or pull request.
+### Reviews
+- `POST /api/v1/listings/:id/reviews` - Add a review with rating
+- `DELETE /api/v1/listings/:id/reviews/:reviewId` - Delete review (owner only)
 
 ## License
 

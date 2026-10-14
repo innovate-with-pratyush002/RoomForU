@@ -169,5 +169,18 @@ module.exports.currentUser = (req, res) => {
 
 // GET /api/v1/auth/google/callback handler
 module.exports.googleCallback = (req, res) => {
-    return res.redirect("/listings");
+    const returnTo = req.session?.returnTo || "/listings";
+    delete req.session?.returnTo;
+
+    const frontendBase =
+        process.env.FRONTEND_URL && !process.env.FRONTEND_URL.includes("localhost:5000")
+            ? process.env.FRONTEND_URL
+            : "http://localhost:3000";
+
+    const targetUrl = returnTo.startsWith("http")
+        ? returnTo
+        : `${frontendBase}${returnTo.startsWith("/") ? returnTo : `/${returnTo}`}`;
+
+    return res.redirect(targetUrl);
 };
+

@@ -1,18 +1,13 @@
 require("dotenv").config();
-const path = require("path");
 const express = require("express");
 const mongoose = require("mongoose");
-const methodOverride = require("method-override");
-const ejsMate = require("ejs-mate");
 const session = require("express-session");
 const MongoStore = require("connect-mongo").default;
-const flash = require("connect-flash");
 const passport = require("passport");
 const LocalStrategy = require("passport-local");
 const GoogleStrategy = require("passport-google-oauth20").Strategy;
 
 const userAuth = require("./models/authentication.js");
-const wrapAsync = require("./utils/wrapAsync.js");
 
 // Security Middleware
 const {
@@ -27,18 +22,9 @@ const { notFoundHandler, errorHandler } = require("./middleware/errorHandler.js"
 
 // Routes
 const apiV1Routes = require("./routes/api/v1/index.js");
-const listingsRoute = require("./routes/listing.js");
-const reviewRoute = require("./routes/review.js");
-const authenticationRoute = require("./routes/authentication.js");
-const filterAndSearchRoute = require("./routes/filterAndSearch.js");
-const userProfileRoute = require("./routes/userProfile.js");
+const authRoutes = require("./routes/api/v1/auth.js");
 
 const app = express();
-
-// View Engine Setup (EJS)
-app.engine("ejs", ejsMate);
-app.set("view engine", "ejs");
-app.set("views", path.join(__dirname, "views"));
 
 // Trust Proxy in production (for load balancers, secure cookies, and rate limiting)
 if (process.env.NODE_ENV === "production") {
@@ -52,8 +38,6 @@ app.use(corsMiddleware);
 // 2. Request Parsers
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
-app.use(methodOverride("_method"));
-app.use(express.static(path.join(__dirname, "/public")));
 
 // 3. CSRF Protection for state mutations
 app.use(csrfProtection);
@@ -98,7 +82,6 @@ const sessionDetail = {
 };
 
 app.use(session(sessionDetail));
-app.use(flash());
 
 // 5. Passport Authentication Configuration
 app.use(passport.initialize());
@@ -172,29 +155,30 @@ passport.deserializeUser(async (id, done) => {
     }
 });
 
-// 6. Template Flash & User Context Locals
-app.use((req, res, next) => {
-    res.locals.success = req.flash("success");
-    res.locals.error = req.flash("error");
-    res.locals.currentUser = req.user;
-    next();
+// 6. Base API Health & Discovery Route
+app.get("/", (req, res) => {
+    res.status(200).json({
+        success: true,
+        service: "RoomForU REST API Backend",
+        version: "v1.0.0",
+        status: "operational",
+        endpoints: {
+            api: "/api/v1",
+            health: "/api/v1/health",
+            auth: "/api/v1/auth",
+            listings: "/api/v1/listings",
+            profile: "/api/v1/profile"
+        }
+    });
 });
 
 // 7. Route Handlers
-// 7.1 REST API v1
+// 7.1 OAuth and Auth routes (supports /auth/google, /auth/google/callback, etc.)
+app.use("/auth", authRoutes);
+
+// 7.2 REST API v1
 app.use("/api", noCacheMiddleware);
 app.use("/api/v1", apiV1Routes);
-
-// 7.2 MVC Web Routes
-app.get("/", wrapAsync(async (req, res) => {
-    res.redirect("/listings");
-}));
-
-app.use("/listings", noCacheMiddleware, listingsRoute);
-app.use("/listings/:id/reviews", noCacheMiddleware, reviewRoute);
-app.use("/", authenticationRoute);
-app.use("/search", noCacheMiddleware, filterAndSearchRoute);
-app.use("/profile", noCacheMiddleware, userProfileRoute);
 
 // 8. Centralized 404 & Error Handling
 app.use(notFoundHandler);
@@ -270,4 +254,3 @@ if (require.main === module) {
 
 app.startServer = startServer;
 module.exports = app;
-
