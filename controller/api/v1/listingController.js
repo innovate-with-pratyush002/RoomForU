@@ -65,6 +65,12 @@ const formatListingResponse = (listing) => {
         return rev;
     }).filter(Boolean);
 
+    const listingType = doc.listingType || "PG";
+    const hostelFor = doc.hostelFor || null;
+    const roomSharingType = doc.roomSharingType || null;
+    const availableBeds = doc.availableBeds !== undefined && doc.availableBeds !== null ? Number(doc.availableBeds) : null;
+    const foodFacility = doc.foodFacility || null;
+
     return {
         ...doc,
         id: doc._id.toString(),
@@ -81,6 +87,12 @@ const formatListingResponse = (listing) => {
         phone: phone,
         owner: ownerName,
         coordinates: { lat, lon },
+        listingType,
+        hostelFor,
+        roomSharingType,
+        availableBeds,
+        foodFacility,
+        rentPerBed: listingType === "Hostel" ? doc.price : null,
         reviews
     };
 };
@@ -90,6 +102,7 @@ module.exports.getAllListings = async (req, res, next) => {
     try {
         const {
             search,
+            listingType,
             roomType,
             preferredTenant,
             availabilityStatus,
@@ -104,6 +117,16 @@ module.exports.getAllListings = async (req, res, next) => {
 
         const filter = {};
 
+        // Listing Type filter (All, PG, Hostel)
+        if (typeof listingType === "string") {
+            const cleanType = listingType.trim();
+            if (cleanType === "Hostel") {
+                filter.listingType = "Hostel";
+            } else if (cleanType === "PG") {
+                filter.listingType = { $in: ["PG", null] };
+            }
+        }
+
         // Safe flexible search with escaped regex to prevent ReDoS / query crashes
         if (typeof search === "string" && search.trim()) {
             const escapedTerm = escapeRegex(search.trim());
@@ -112,22 +135,25 @@ module.exports.getAllListings = async (req, res, next) => {
                 { title: searchRegex },
                 { location: searchRegex },
                 { state: searchRegex },
-                { description: searchRegex }
+                { description: searchRegex },
+                { roomSharingType: searchRegex },
+                { hostelFor: searchRegex },
+                { foodFacility: searchRegex }
             ];
         }
 
         // Room and Tenant filters with strict enum type coercion to prevent NoSQL operator injection
-        const allowedRoomTypes = ["Single", "Double", "Shared"];
+        const allowedRoomTypes = ["Single", "Double", "Shared", "Single Room", "Shared Room", "1 BHK", "2 BHK", "3 BHK", "PG"];
         if (typeof roomType === "string" && allowedRoomTypes.includes(roomType.trim())) {
             filter.roomType = roomType.trim();
         }
 
-        const allowedTenantTypes = ["Boys", "Girls", "Any"];
+        const allowedTenantTypes = ["Boys", "Girls", "Any", "Students", "Working Professionals", "Family"];
         if (typeof preferredTenant === "string" && allowedTenantTypes.includes(preferredTenant.trim())) {
             filter.preferredTenant = preferredTenant.trim();
         }
 
-        const allowedAvailability = ["Available", "Booked"];
+        const allowedAvailability = ["Available", "Booked", "Rented"];
         if (typeof availabilityStatus === "string" && allowedAvailability.includes(availabilityStatus.trim())) {
             filter.availabilityStatus = availabilityStatus.trim();
         }
@@ -162,7 +188,7 @@ module.exports.getAllListings = async (req, res, next) => {
         const [total, listings] = await Promise.all([
             Listing.countDocuments(filter),
             Listing.find(filter)
-                .select("title price location state roomType preferredTenant availabilityStatus image user createdAt mapCoordinates")
+                .select("title price location state roomType preferredTenant availabilityStatus image user createdAt mapCoordinates listingType hostelFor roomSharingType availableBeds foodFacility")
                 .populate("user", "name picture") // Privacy: Do not leak host personal email on public feed
                 .sort(sortOption)
                 .skip(skip)
@@ -215,6 +241,7 @@ module.exports.createListing = async (req, res, next) => {
     try {
         // Accept payload either directly or nested under place (for form compatibility)
         const payload = req.body.place || req.body;
+        const listingType = payload.listingType === "Hostel" ? "Hostel" : "PG";
 
         const {
             title,
@@ -222,51 +249,19 @@ module.exports.createListing = async (req, res, next) => {
             price,
             location,
             state,
+            // PG fields
             roomType,
             preferredTenant,
+            // Hostel fields
+            hostelFor,
+            roomSharingType,
+            availableBeds,
+            foodFacility,
             availabilityStatus = "Available"
         } = payload;
 
         // Contact phone resolution
         const contactPhone = typeof payload.contact === "object" ? payload.contact.phone : (payload.contact || payload.phone);
-
-        if (!title || !price || !location || !state || !roomType || !preferredTenant || !contactPhone) {
-            throw new ExpressError(400, "Missing required listing fields: title, price, location, state, roomType, preferredTenant, and contact phone are required.");
-        }
-
-        // Validate lengths and ranges
-        if (typeof title !== "string" || title.trim().length < 3 || title.trim().length > 200) {
-            throw new ExpressError(400, "Title must be between 3 and 200 characters.");
-        }
-        if (description && (typeof description !== "string" || description.trim().length > 5000)) {
-            throw new ExpressError(400, "Description cannot exceed 5000 characters.");
-        }
-        const numericPrice = Number(price);
-        if (isNaN(numericPrice) || numericPrice <= 0 || numericPrice > 10000000) {
-            throw new ExpressError(400, "Price must be a valid positive number up to 10,000,000.");
-        }
-        if (typeof location !== "string" || location.trim().length < 2 || location.trim().length > 100) {
-            throw new ExpressError(400, "Location must be between 2 and 100 characters.");
-        }
-        if (typeof state !== "string" || state.trim().length < 2 || state.trim().length > 100) {
-            throw new ExpressError(400, "State must be between 2 and 100 characters.");
-        }
-        const validRoomTypes = ["Single Room", "Shared Room", "1 BHK", "2 BHK", "3 BHK", "PG"];
-        if (!validRoomTypes.includes(roomType)) {
-            throw new ExpressError(400, `Invalid roomType. Allowed: ${validRoomTypes.join(", ")}`);
-        }
-        const validTenants = ["Students", "Working Professionals", "Family", "Any"];
-        if (!validTenants.includes(preferredTenant)) {
-            throw new ExpressError(400, `Invalid preferredTenant. Allowed: ${validTenants.join(", ")}`);
-        }
-        const validStatus = ["Available", "Rented"];
-        if (!validStatus.includes(availabilityStatus)) {
-            throw new ExpressError(400, `Invalid availabilityStatus. Allowed: ${validStatus.join(", ")}`);
-        }
-        const cleanPhone = String(contactPhone).trim();
-        if (cleanPhone.length < 7 || cleanPhone.length > 20) {
-            throw new ExpressError(400, "Contact phone must be between 7 and 20 characters.");
-        }
 
         // Coordinates resolution
         let coordinates = [77.2090, 28.6139]; // Default coordinates (Delhi)
@@ -296,23 +291,115 @@ module.exports.createListing = async (req, res, next) => {
             url = payload.imageUrl || (typeof payload.image === "string" ? payload.image : payload.image?.url) || url;
         }
 
-        const newListing = new Listing({
-            title: title.trim(),
-            description: (description || "").trim(),
-            price: numericPrice,
-            location: location.trim(),
-            state: state.trim(),
-            roomType,
-            preferredTenant,
-            availabilityStatus,
-            contact: { phone: cleanPhone },
-            user: req.user._id,
-            image: { url, fileName },
-            mapCoordinates: {
-                type: "Point",
-                coordinates
+        // Common validations
+        if (!title || price === undefined || !location || !state || !contactPhone) {
+            throw new ExpressError(400, "Title, price, location, state, and contact phone are required.");
+        }
+        if (typeof title !== "string" || title.trim().length < 3 || title.trim().length > 200) {
+            throw new ExpressError(400, "Title must be between 3 and 200 characters.");
+        }
+        if (description && (typeof description !== "string" || description.trim().length > 5000)) {
+            throw new ExpressError(400, "Description cannot exceed 5000 characters.");
+        }
+        const numericPrice = Number(price);
+        if (isNaN(numericPrice) || numericPrice <= 0 || numericPrice > 10000000) {
+            throw new ExpressError(400, "Price must be a valid positive number up to 10,000,000.");
+        }
+        if (typeof location !== "string" || location.trim().length < 2 || location.trim().length > 100) {
+            throw new ExpressError(400, "Location must be between 2 and 100 characters.");
+        }
+        if (typeof state !== "string" || state.trim().length < 2 || state.trim().length > 100) {
+            throw new ExpressError(400, "State must be between 2 and 100 characters.");
+        }
+        const cleanPhone = String(contactPhone).trim();
+        if (cleanPhone.length < 7 || cleanPhone.length > 20) {
+            throw new ExpressError(400, "Contact phone must be between 7 and 20 characters.");
+        }
+
+        let newListing;
+
+        if (listingType === "Hostel") {
+            // Specific Hostel Validations
+            if (!hostelFor || !roomSharingType || availableBeds === undefined || !foodFacility) {
+                throw new ExpressError(400, "Hostel for (Boys/Girls/Co-ed), room sharing type, available beds, and food facility are required for hostel listings.");
             }
-        });
+            const validHostelFor = ["Boys", "Girls", "Co-ed"];
+            if (!validHostelFor.includes(hostelFor)) {
+                throw new ExpressError(400, `Invalid hostelFor. Allowed: ${validHostelFor.join(", ")}`);
+            }
+            const validSharing = ["Single Sharing", "Double Sharing", "Triple Sharing", "Four Sharing", "5–6 Sharing", "Dormitory"];
+            if (!validSharing.includes(roomSharingType)) {
+                throw new ExpressError(400, `Invalid roomSharingType. Allowed: ${validSharing.join(", ")}`);
+            }
+            const numBeds = Number(availableBeds);
+            if (isNaN(numBeds) || numBeds < 0 || numBeds > 10000) {
+                throw new ExpressError(400, "Available beds must be a non-negative number.");
+            }
+            const validFood = ["Included in Rent", "Available at Extra Cost", "Not Available"];
+            if (!validFood.includes(foodFacility)) {
+                throw new ExpressError(400, `Invalid foodFacility. Allowed: ${validFood.join(", ")}`);
+            }
+
+            newListing = new Listing({
+                listingType: "Hostel",
+                title: title.trim(),
+                description: (description || "").trim(),
+                price: numericPrice,
+                location: location.trim(),
+                state: state.trim(),
+                hostelFor,
+                roomSharingType,
+                availableBeds: numBeds,
+                foodFacility,
+                // Fallbacks for general filters
+                roomType: roomSharingType,
+                preferredTenant: hostelFor === "Co-ed" ? "Any" : hostelFor,
+                availabilityStatus: numBeds > 0 ? "Available" : "Booked",
+                contact: { phone: cleanPhone },
+                user: req.user._id,
+                image: { url, fileName },
+                mapCoordinates: {
+                    type: "Point",
+                    coordinates
+                }
+            });
+        } else {
+            // Specific PG Validations
+            if (!roomType || !preferredTenant) {
+                throw new ExpressError(400, "Missing required PG listing fields: roomType and preferredTenant are required.");
+            }
+            const validRoomTypes = ["Single", "Double", "Shared", "Single Room", "Shared Room", "1 BHK", "2 BHK", "3 BHK", "PG"];
+            if (!validRoomTypes.includes(roomType)) {
+                throw new ExpressError(400, `Invalid roomType. Allowed: ${validRoomTypes.join(", ")}`);
+            }
+            const validTenants = ["Boys", "Girls", "Any", "Students", "Working Professionals", "Family"];
+            if (!validTenants.includes(preferredTenant)) {
+                throw new ExpressError(400, `Invalid preferredTenant. Allowed: ${validTenants.join(", ")}`);
+            }
+            const validStatus = ["Available", "Rented", "Booked"];
+            if (!validStatus.includes(availabilityStatus)) {
+                throw new ExpressError(400, `Invalid availabilityStatus. Allowed: ${validStatus.join(", ")}`);
+            }
+
+            newListing = new Listing({
+                listingType: "PG",
+                title: title.trim(),
+                description: (description || "").trim(),
+                price: numericPrice,
+                location: location.trim(),
+                state: state.trim(),
+                roomType,
+                preferredTenant,
+                availabilityStatus,
+                contact: { phone: cleanPhone },
+                user: req.user._id,
+                image: { url, fileName },
+                mapCoordinates: {
+                    type: "Point",
+                    coordinates
+                }
+            });
+        }
 
         await newListing.save();
 
@@ -321,7 +408,7 @@ module.exports.createListing = async (req, res, next) => {
         return res.status(201).json({
             success: true,
             status: 201,
-            message: "Listing created successfully.",
+            message: `${listingType} listing created successfully.`,
             data: formatListingResponse(populatedListing)
         });
     } catch (err) {
@@ -336,6 +423,8 @@ module.exports.updateListing = async (req, res, next) => {
         const payload = req.body.place || req.body;
 
         const updateData = {};
+        // Preserve immutable listing category
+        updateData.listingType = req.listing?.listingType || "PG";
         if (payload.title !== undefined) {
             if (typeof payload.title !== "string" || payload.title.trim().length < 3 || payload.title.trim().length > 200) {
                 throw new ExpressError(400, "Title must be between 3 and 200 characters.");
@@ -367,22 +456,58 @@ module.exports.updateListing = async (req, res, next) => {
             }
             updateData.state = payload.state.trim();
         }
+
+        // PG specific updates
         if (payload.roomType !== undefined) {
-            const validRoomTypes = ["Single Room", "Shared Room", "1 BHK", "2 BHK", "3 BHK", "PG"];
+            const validRoomTypes = ["Single", "Double", "Shared", "Single Room", "Shared Room", "1 BHK", "2 BHK", "3 BHK", "PG"];
             if (!validRoomTypes.includes(payload.roomType)) {
                 throw new ExpressError(400, `Invalid roomType. Allowed: ${validRoomTypes.join(", ")}`);
             }
             updateData.roomType = payload.roomType;
         }
         if (payload.preferredTenant !== undefined) {
-            const validTenants = ["Students", "Working Professionals", "Family", "Any"];
+            const validTenants = ["Boys", "Girls", "Any", "Students", "Working Professionals", "Family"];
             if (!validTenants.includes(payload.preferredTenant)) {
                 throw new ExpressError(400, `Invalid preferredTenant. Allowed: ${validTenants.join(", ")}`);
             }
             updateData.preferredTenant = payload.preferredTenant;
         }
+
+        // Hostel specific updates
+        if (payload.hostelFor !== undefined) {
+            const validHostelFor = ["Boys", "Girls", "Co-ed"];
+            if (!validHostelFor.includes(payload.hostelFor)) {
+                throw new ExpressError(400, `Invalid hostelFor. Allowed: ${validHostelFor.join(", ")}`);
+            }
+            updateData.hostelFor = payload.hostelFor;
+        }
+        if (payload.roomSharingType !== undefined) {
+            const validSharing = ["Single Sharing", "Double Sharing", "Triple Sharing", "Four Sharing", "5–6 Sharing", "Dormitory"];
+            if (!validSharing.includes(payload.roomSharingType)) {
+                throw new ExpressError(400, `Invalid roomSharingType. Allowed: ${validSharing.join(", ")}`);
+            }
+            updateData.roomSharingType = payload.roomSharingType;
+        }
+        if (payload.availableBeds !== undefined) {
+            const numBeds = Number(payload.availableBeds);
+            if (isNaN(numBeds) || numBeds < 0 || numBeds > 10000) {
+                throw new ExpressError(400, "Available beds must be a non-negative number.");
+            }
+            updateData.availableBeds = numBeds;
+            if (numBeds === 0 && !payload.availabilityStatus) {
+                updateData.availabilityStatus = "Booked";
+            }
+        }
+        if (payload.foodFacility !== undefined) {
+            const validFood = ["Included in Rent", "Available at Extra Cost", "Not Available"];
+            if (!validFood.includes(payload.foodFacility)) {
+                throw new ExpressError(400, `Invalid foodFacility. Allowed: ${validFood.join(", ")}`);
+            }
+            updateData.foodFacility = payload.foodFacility;
+        }
+
         if (payload.availabilityStatus !== undefined) {
-            const validStatus = ["Available", "Rented"];
+            const validStatus = ["Available", "Rented", "Booked"];
             if (!validStatus.includes(payload.availabilityStatus)) {
                 throw new ExpressError(400, `Invalid availabilityStatus. Allowed: ${validStatus.join(", ")}`);
             }

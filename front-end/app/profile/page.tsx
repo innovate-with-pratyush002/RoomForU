@@ -213,9 +213,6 @@ export default function ProfilePage() {
               Manage and update your published properties
             </p>
           </div>
-          <span className="text-xs font-bold text-slate-500">
-            Total: {listings.length}
-          </span>
         </div>
 
         {listings.length > 0 ? (

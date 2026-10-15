@@ -10,12 +10,13 @@ import { LocationPicker } from "./LocationPicker";
 
 interface ListingFormProps {
   listing?: Listing;
+  onChangeType?: () => void;
 }
 
 const inputStyle =
   "mt-2 min-h-12 w-full rounded-2xl border border-slate-300/80 bg-slate-50/50 px-4 text-sm text-slate-900 outline-none transition focus:border-teal-700 focus:bg-white focus:ring-4 focus:ring-teal-700/10";
 
-export function ListingForm({ listing }: ListingFormProps) {
+export function ListingForm({ listing, onChangeType }: ListingFormProps) {
   const router = useRouter();
   const edit = Boolean(listing);
   const listingId = listing?.id || listing?._id;
@@ -149,6 +150,7 @@ export function ListingForm({ listing }: ListingFormProps) {
 
     try {
       const formData = new FormData();
+      formData.append("listingType", "PG");
       formData.append("title", title.trim());
       formData.append("description", description.trim());
       formData.append("price", String(Number(price)));
@@ -194,22 +196,35 @@ export function ListingForm({ listing }: ListingFormProps) {
 
   return (
     <section className="mx-auto max-w-[1080px] px-4 py-6 pb-20 sm:px-6">
-      <div className="mb-4">
+      <div className="mb-4 flex items-center justify-between">
         <Link
           href="/listings"
           className="inline-flex items-center gap-1.5 text-xs font-bold text-teal-700 hover:text-teal-800"
         >
           <ArrowLeft size={14} /> Back to listings
         </Link>
+
+        {onChangeType && !edit && (
+          <button
+            type="button"
+            onClick={onChangeType}
+            className="text-xs font-bold text-teal-700 underline hover:text-teal-900"
+          >
+            ← Change Listing Type (Switch to Hostel)
+          </button>
+        )}
       </div>
 
       <div className="rounded-[28px] border border-slate-300/30 bg-white p-6 shadow-md sm:p-8">
         <div className="border-b border-slate-100 pb-5">
-          <span className="text-xs font-bold tracking-widest text-teal-700 uppercase">
-            {edit ? "Edit Room Details" : "Publish New Listing"}
-          </span>
-          <h1 className="mt-1 text-2xl font-extrabold text-slate-900 sm:text-3xl">
-            {edit ? "Update room information" : "List your room for students"}
+          <div className="flex items-center gap-2">
+            <span className="rounded-full bg-teal-50 px-3 py-1 text-xs font-extrabold text-teal-700 uppercase tracking-widest">
+              PG Accommodation
+            </span>
+            {!edit && <span className="text-xs font-semibold text-slate-400">• Step 2 of 2</span>}
+          </div>
+          <h1 className="mt-2 text-2xl font-extrabold text-slate-900 sm:text-3xl">
+            {edit ? "Update Room Information" : "List Your Room for Students"}
           </h1>
           <p className="mt-2 text-xs leading-relaxed text-slate-500 sm:text-sm">
             Provide accurate details, genuine photos, and pinpoint the location on the map to help students find their ideal stay easily.

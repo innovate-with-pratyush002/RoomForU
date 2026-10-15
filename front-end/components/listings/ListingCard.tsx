@@ -15,6 +15,8 @@ export function ListingCard({ listing, profile = false, onDelete }: ListingCardP
     listing.image ||
     "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=1000&q=80";
 
+  const isHostel = listing.listingType === "Hostel";
+
   return (
     <article className="group flex h-full flex-col overflow-hidden rounded-[24px] border border-slate-300/30 bg-white shadow-[0_18px_40px_rgba(15,23,42,.08)] transition duration-300 hover:-translate-y-1.5 hover:shadow-[0_24px_48px_rgba(15,23,42,.14)]">
       <Link href={`/listings/${listingId}`} className="relative block overflow-hidden">
@@ -29,13 +31,28 @@ export function ListingCard({ listing, profile = false, onDelete }: ListingCardP
           
           <div className="absolute top-3 left-3 flex flex-wrap gap-1.5">
             <span className="rounded-full bg-white/95 px-3 py-1 text-xs font-bold text-teal-700 shadow-sm">
-              {listing.availabilityStatus || "Available"}
+              {isHostel && listing.availableBeds !== undefined
+                ? `${listing.availableBeds} beds vacant`
+                : listing.availabilityStatus || "Available"}
             </span>
-            {listing.roomType && (
-              <span className="rounded-full bg-teal-800/80 px-2.5 py-1 text-xs font-semibold text-white backdrop-blur-xs">
-                {listing.roomType}
-              </span>
+
+            {isHostel ? (
+              listing.roomSharingType && (
+                <span className="rounded-full bg-teal-800/80 px-2.5 py-1 text-xs font-semibold text-white backdrop-blur-xs">
+                  {listing.roomSharingType}
+                </span>
+              )
+            ) : (
+              listing.roomType && (
+                <span className="rounded-full bg-teal-800/80 px-2.5 py-1 text-xs font-semibold text-white backdrop-blur-xs">
+                  {listing.roomType}
+                </span>
+              )
             )}
+
+            <span className="rounded-full bg-white/95 px-3 py-1 text-xs font-bold text-teal-700 shadow-sm">
+              {isHostel ? "Hostel" : "PG"}
+            </span>
           </div>
         </div>
       </Link>
@@ -52,17 +69,35 @@ export function ListingCard({ listing, profile = false, onDelete }: ListingCardP
           <span className="truncate">{listing.location}, {listing.state}</span>
         </p>
 
-        {listing.preferredTenant && (
-          <p className="mt-2 text-xs text-slate-600">
-            Preferred: <span className="font-semibold text-slate-800">{listing.preferredTenant}</span>
-          </p>
+        {isHostel ? (
+          <div className="mt-2.5 space-y-1 text-xs text-slate-600">
+            <p>
+              Hostel For:{" "}
+              <span className="font-semibold text-slate-800">
+                {listing.hostelFor || "All"}
+              </span>
+            </p>
+            {listing.foodFacility && (
+              <p className="truncate text-[11px] text-slate-500">
+                Food: {listing.foodFacility}
+              </p>
+            )}
+          </div>
+        ) : (
+          listing.preferredTenant && (
+            <p className="mt-2 text-xs text-slate-600">
+              Preferred: <span className="font-semibold text-slate-800">{listing.preferredTenant}</span>
+            </p>
+          )
         )}
 
         <div className="mt-auto flex items-end justify-between gap-2 pt-4">
           <div>
             <p className="text-lg font-black text-emerald-600">
               ₹ {Number(listing.price || 0).toLocaleString("en-IN")}
-              <span className="ml-1 text-xs font-semibold text-slate-500">/mo</span>
+              <span className="ml-1 text-xs font-semibold text-slate-500">
+                {isHostel ? "/bed/mo" : "/mo"}
+              </span>
             </p>
           </div>
 

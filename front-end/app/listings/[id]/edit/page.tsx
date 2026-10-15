@@ -1,5 +1,6 @@
 import { notFound, redirect } from "next/navigation";
 import { ListingForm } from "@/components/forms/ListingForm";
+import { HostelForm } from "@/components/forms/HostelForm";
 import { getListing } from "@/lib/data";
 import { api } from "@/lib/api";
 
@@ -41,6 +42,10 @@ export default async function EditListingPage({
 
   if (!currentUserId || !listingOwnerId || String(currentUserId) !== String(listingOwnerId)) {
     redirect(`/listings/${id}`);
+  }
+
+  if (listing.listingType === "Hostel") {
+    return <HostelForm listing={listing} />;
   }
 
   return <ListingForm listing={listing} />;

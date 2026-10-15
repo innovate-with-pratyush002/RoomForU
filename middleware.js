@@ -30,7 +30,7 @@ module.exports.isLoggedIn = (req, res, next) => {
 module.exports.isUser = async (req, res, next) => {
     try {
         const { id } = req.params;
-        const listing = await Listing.findById(id).select("_id user");
+        const listing = await Listing.findById(id).select("_id user listingType");
 
         if (!listing) {
             return res.status(404).json({

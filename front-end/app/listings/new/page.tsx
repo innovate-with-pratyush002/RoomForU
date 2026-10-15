@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { ListingForm } from "@/components/forms/ListingForm";
+import { NewListingWizard } from "@/components/forms/NewListingWizard";
 import { api } from "@/lib/api";
 
 export const dynamic = "force-dynamic";
@@ -11,5 +11,5 @@ export default async function NewListingPage() {
     redirect("/signin?returnTo=/listings/new");
   }
 
-  return <ListingForm />;
+  return <NewListingWizard />;
 }

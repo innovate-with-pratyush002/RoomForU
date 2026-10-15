@@ -40,21 +40,69 @@ const listingSchema = new Schema(
       trim: true
     },
 
+    listingType: {
+      type: String,
+      enum: ["PG", "Hostel"],
+      default: "PG"
+    },
+
     roomType: {
       type: String,
-      enum: ["Single", "Double", "Shared"],
-      required: true
+      required: function () {
+        return this.listingType === "PG";
+      }
     },
 
     preferredTenant: {
       type: String,
-      enum: ["Boys", "Girls", "Any"],
-      required: true
+      required: function () {
+        return this.listingType === "PG";
+      }
+    },
+
+    // Hostel-specific fields
+    hostelFor: {
+      type: String,
+      enum: ["Boys", "Girls", "Co-ed"],
+      required: function () {
+        return this.listingType === "Hostel";
+      }
+    },
+
+    roomSharingType: {
+      type: String,
+      enum: [
+        "Single Sharing",
+        "Double Sharing",
+        "Triple Sharing",
+        "Four Sharing",
+        "5–6 Sharing",
+        "Dormitory"
+      ],
+      required: function () {
+        return this.listingType === "Hostel";
+      }
+    },
+
+    availableBeds: {
+      type: Number,
+      min: 0,
+      required: function () {
+        return this.listingType === "Hostel";
+      }
+    },
+
+    foodFacility: {
+      type: String,
+      enum: ["Included in Rent", "Available at Extra Cost", "Not Available"],
+      required: function () {
+        return this.listingType === "Hostel";
+      }
     },
 
     availabilityStatus: {
       type: String,
-      enum: ["Available", "Booked"],
+      enum: ["Available", "Booked", "Rented"],
       default: "Available"
     },
 
@@ -103,6 +151,8 @@ listingSchema.index({ location: 1, state: 1 });
 listingSchema.index({ price: 1 });
 listingSchema.index({ user: 1 });
 listingSchema.index({ createdAt: -1 });
+listingSchema.index({ listingType: 1 });
+listingSchema.index({ listingType: 1, price: 1 });
 listingSchema.index({ roomType: 1, price: 1 });
 listingSchema.index({ availabilityStatus: 1 });
 

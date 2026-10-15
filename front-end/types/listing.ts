@@ -25,9 +25,24 @@ export interface Listing {
   price: number;
   location: string;
   state: string;
-  roomType: "Single" | "Double" | "Shared" | string;
-  preferredTenant: "Boys" | "Girls" | "Any" | string;
-  availabilityStatus: "Available" | "Booked" | string;
+  listingType?: "PG" | "Hostel" | string;
+  roomType?: "Single" | "Double" | "Shared" | string;
+  preferredTenant?: "Boys" | "Girls" | "Any" | string;
+  // Hostel fields
+  hostelFor?: "Boys" | "Girls" | "Co-ed" | string;
+  roomSharingType?:
+    | "Single Sharing"
+    | "Double Sharing"
+    | "Triple Sharing"
+    | "Four Sharing"
+    | "5–6 Sharing"
+    | "Dormitory"
+    | string;
+  availableBeds?: number;
+  foodFacility?: "Included in Rent" | "Available at Extra Cost" | "Not Available" | string;
+  rentPerBed?: number;
+
+  availabilityStatus: "Available" | "Booked" | "Rented" | string;
   phone: string;
   contact?: { phone: string };
   owner: string;
@@ -90,6 +105,7 @@ export interface ProfileApiResponse {
 
 export interface ListingFilters {
   search?: string;
+  listingType?: "All" | "PG" | "Hostel" | string;
   roomType?: string;
   preferredTenant?: string;
   availabilityStatus?: string;

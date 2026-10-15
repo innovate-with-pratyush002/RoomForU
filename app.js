@@ -1,4 +1,17 @@
 require("dotenv").config();
+const dns = require("dns");
+
+// Prevent querySrv ESERVFAIL on Linux by configuring robust DNS resolution
+try {
+    dns.setDefaultResultOrder("ipv4first");
+    const currentServers = dns.getServers();
+    const fallbackServers = ["8.8.8.8", "1.1.1.1"];
+    const uniqueServers = [...new Set([...fallbackServers, ...currentServers])];
+    dns.setServers(uniqueServers);
+} catch (dnsErr) {
+    // Ignore if not supported in current environment
+}
+
 const express = require("express");
 const mongoose = require("mongoose");
 const session = require("express-session");

@@ -15,6 +15,7 @@ export default async function ListingsPage({ searchParams }: PageProps) {
   const rawParams = await searchParams;
 
   const search = typeof rawParams.search === "string" ? rawParams.search : undefined;
+  const listingType = typeof rawParams.listingType === "string" ? rawParams.listingType : undefined;
   const roomType = typeof rawParams.roomType === "string" ? rawParams.roomType : undefined;
   const preferredTenant = typeof rawParams.preferredTenant === "string" ? rawParams.preferredTenant : undefined;
   const sort = typeof rawParams.sort === "string" ? rawParams.sort : "newest";
@@ -22,6 +23,7 @@ export default async function ListingsPage({ searchParams }: PageProps) {
 
   const filters: ListingFilters = {
     search,
+    listingType,
     roomType,
     preferredTenant,
     sort,
@@ -35,6 +37,7 @@ export default async function ListingsPage({ searchParams }: PageProps) {
   const createQueryUrl = (updates: Record<string, string | undefined>) => {
     const current = new URLSearchParams();
     if (search) current.set("search", search);
+    if (listingType) current.set("listingType", listingType);
     if (roomType) current.set("roomType", roomType);
     if (preferredTenant) current.set("preferredTenant", preferredTenant);
     if (sort && sort !== "newest") current.set("sort", sort);
@@ -55,7 +58,9 @@ export default async function ListingsPage({ searchParams }: PageProps) {
   const roomTypes = ["Single", "Double", "Shared"];
   const tenantTypes = ["Boys", "Girls", "Any"];
 
-  const hasActiveFilters = Boolean(search || roomType || preferredTenant || (sort && sort !== "newest"));
+  const hasActiveFilters = Boolean(
+    search || listingType || roomType || preferredTenant || (sort && sort !== "newest")
+  );
 
   return (
     <div className="mx-auto max-w-[1460px] px-4 pt-4 pb-16 sm:px-6">
@@ -66,10 +71,10 @@ export default async function ListingsPage({ searchParams }: PageProps) {
             Verified Student & Working Professional Stays
           </span>
           <h1 className="mt-3 max-w-[650px] text-3xl leading-[1.15] font-extrabold tracking-tight sm:text-5xl">
-            Find a room that feels right for your daily life
+            Find a room or hostel that feels right for you
           </h1>
           <p className="mt-3 max-w-xl text-sm leading-relaxed text-white/90 sm:text-base">
-            Browse student rooms and guest houses with transparent monthly rent, clear photos, verified tenant preferences, and precise location map pins.
+            Browse verified PGs and hostels with transparent rent per room or bed, meal facilities, real photos, and pinpoint map locations.
           </p>
 
           <div className="mt-5 flex flex-wrap gap-3">
@@ -77,13 +82,13 @@ export default async function ListingsPage({ searchParams }: PageProps) {
               href="#listings-feed"
               className="rounded-xl bg-white px-5 py-3 text-sm font-bold text-teal-800 shadow-md transition hover:bg-slate-100"
             >
-              Explore {total > 0 ? `${total} Rooms` : "Listings"}
+              Explore Accommodations
             </a>
             <Link
               href="/listings/new"
               className="rounded-xl border border-white/45 bg-white/10 px-5 py-3 text-sm font-semibold backdrop-blur-xs transition hover:bg-white/20"
             >
-              + Add New Listing
+              + Add New Listing (PG / Hostel)
             </Link>
           </div>
         </div>
@@ -95,6 +100,43 @@ export default async function ListingsPage({ searchParams }: PageProps) {
           {/* Filter Pills and Sort Bar */}
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="flex flex-wrap items-center gap-2">
+              {/* 4.1 Listing Type Filter (All, PG, Hostel) */}
+              <div className="mr-1 flex items-center gap-1.5 border-r border-slate-200 pr-3">
+                <span className="text-xs font-extrabold tracking-wider text-slate-800 uppercase">
+                  Type:
+                </span>
+                <Link
+                  href={createQueryUrl({ listingType: undefined, page: "1" })}
+                  className={`rounded-full px-3 py-1 text-xs font-bold transition ${
+                    !listingType
+                      ? "bg-slate-900 text-white shadow-xs"
+                      : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                  }`}
+                >
+                  All
+                </Link>
+                <Link
+                  href={createQueryUrl({ listingType: "PG", page: "1" })}
+                  className={`rounded-full px-3 py-1 text-xs font-bold transition ${
+                    listingType === "PG"
+                      ? "bg-teal-700 text-white shadow-xs"
+                      : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                  }`}
+                >
+                  PG
+                </Link>
+                <Link
+                  href={createQueryUrl({ listingType: "Hostel", page: "1" })}
+                  className={`rounded-full px-3 py-1 text-xs font-bold transition ${
+                    listingType === "Hostel"
+                      ? "bg-teal-700 text-white shadow-xs"
+                      : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                  }`}
+                >
+                  Hostel
+                </Link>
+              </div>
+
               <span className="flex items-center gap-1 text-xs font-bold tracking-wider text-slate-500 uppercase">
                 <SlidersHorizontal size={13} /> Room:
               </span>
@@ -177,10 +219,16 @@ export default async function ListingsPage({ searchParams }: PageProps) {
         <div className="mt-6 flex flex-col justify-between gap-2 sm:flex-row sm:items-center">
           <div>
             <h2 className="text-2xl font-extrabold text-slate-900">
-              {search ? `Search results for "${search}"` : "Available Student Rooms"}
+              {search
+                ? `Search results for "${search}"`
+                : listingType === "Hostel"
+                ? "Verified Student & Commercial Hostels"
+                : listingType === "PG"
+                ? "Available PG Accommodations"
+                : "Available Student Rooms & Hostels"}
             </h2>
             <p className="text-xs font-medium text-slate-500">
-              Showing {listings.length} of {total} verified accommodations
+              Verified accommodations for students and working professionals
             </p>
           </div>
         </div>

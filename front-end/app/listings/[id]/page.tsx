@@ -65,14 +65,32 @@ export default async function DetailPage({
     currentUserId && listingOwnerId && String(currentUserId) === String(listingOwnerId)
   );
 
-  const infoItems = [
-    { label: "Location", value: listing.location },
-    { label: "State", value: listing.state },
-    { label: "Room Type", value: listing.roomType || "Single" },
-    { label: "Preferred Tenant", value: listing.preferredTenant || "Any" },
-    { label: "Contact", value: listing.phone || "N/A" },
-    { label: "Reviews", value: `${listing.reviews?.length || 0} ratings shared` },
-  ];
+  const isHostel = listing.listingType === "Hostel";
+
+  const infoItems = isHostel
+    ? [
+        { label: "Hostel For", value: listing.hostelFor || "All" },
+        { label: "Room Sharing", value: listing.roomSharingType || "Single Sharing" },
+        {
+          label: "Available Beds",
+          value:
+            listing.availableBeds !== undefined
+              ? `${listing.availableBeds} beds vacant`
+              : "Available",
+        },
+        { label: "Food / Mess", value: listing.foodFacility || "Not Available" },
+        { label: "Location", value: `${listing.location}, ${listing.state}` },
+        { label: "Contact Phone", value: listing.phone || "N/A" },
+        { label: "Reviews", value: `${listing.reviews?.length || 0} ratings shared` },
+      ]
+    : [
+        { label: "Location", value: listing.location },
+        { label: "State", value: listing.state },
+        { label: "Room Type", value: listing.roomType || "Single" },
+        { label: "Preferred Tenant", value: listing.preferredTenant || "Any" },
+        { label: "Contact", value: listing.phone || "N/A" },
+        { label: "Reviews", value: `${listing.reviews?.length || 0} ratings shared` },
+      ];
 
   return (
     <div className="mx-auto max-w-[1400px] px-5 py-4 pb-16">
@@ -85,33 +103,44 @@ export default async function DetailPage({
             alt={listing.title}
             className="h-full w-full object-cover"
           />
-          <span className="absolute top-4 left-4 rounded-full bg-white/95 px-3.5 py-2 text-sm font-bold text-[#0f766e] shadow-lg">
-            {listing.availabilityStatus || "Available"}
-          </span>
+          <div className="absolute top-4 left-4 flex flex-wrap gap-2">
+            <span className="rounded-full bg-white/95 px-3.5 py-1.5 text-xs font-bold text-teal-700 shadow-sm">
+              {isHostel ? "Hostel" : "PG"}
+            </span>
+            <span className="rounded-full bg-white/95 px-3.5 py-1.5 text-xs font-bold text-[#0f766e] shadow-lg">
+              {isHostel && listing.availableBeds !== undefined
+                ? `${listing.availableBeds} beds vacant`
+                : listing.availabilityStatus || "Available"}
+            </span>
+          </div>
         </div>
 
         {/* Right: Info Section */}
         <div className="flex flex-col justify-between rounded-[28px] border border-slate-300/20 bg-white/95 p-5 shadow-[0_20px_45px_rgba(15,23,42,.08)]">
           <div>
             <p className="text-[13px] font-bold tracking-wider text-[#0f766e] uppercase">
-              Student stay details
+              {isHostel ? "Hostel accommodation details" : "Student stay details"}
             </p>
             <h1 className="mt-2 text-3xl font-extrabold leading-tight text-slate-900 sm:text-4xl">
               {listing.title}
             </h1>
-            <p className="mt-3 text-sm leading-relaxed text-slate-600 sm:text-[15px]">
-              {listing.description}
-            </p>
+            {listing.description && (
+              <p className="mt-3 text-sm leading-relaxed text-slate-600 sm:text-[15px]">
+                {listing.description}
+              </p>
+            )}
 
             {/* Top Info Row: Price & Owner */}
             <div className="mt-4 grid gap-3.5 sm:grid-cols-2">
               <div className="rounded-[22px] border border-teal-500/20 bg-white p-4">
                 <p className="text-xs font-bold tracking-wider text-[#0f766e] uppercase">
-                  Monthly Rent
+                  {isHostel ? "Monthly Rent per Bed" : "Monthly Rent"}
                 </p>
                 <p className="mt-1 text-3xl font-extrabold text-[#059669]">
                   ₹ {Number(listing.price || 0).toLocaleString("en-IN")}
-                  <span className="ml-1 text-sm font-semibold text-slate-500">/month</span>
+                  <span className="ml-1 text-sm font-semibold text-slate-500">
+                    {isHostel ? "/bed/month" : "/month"}
+                  </span>
                 </p>
               </div>
 
@@ -125,7 +154,7 @@ export default async function DetailPage({
               </div>
             </div>
 
-            {/* 6 Info Grid Cards */}
+            {/* Info Grid Cards */}
             <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3">
               {infoItems.map(({ label, value }) => (
                 <div

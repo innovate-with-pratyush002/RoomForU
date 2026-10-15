@@ -11,7 +11,7 @@ module.exports.getUserProfile = async (req, res, next) => {
         const [userData, userListings] = await Promise.all([
             UserAuth.findById(userId).select("-hash -salt").lean(),
             Listing.find({ user: userId })
-                .select("title price location state roomType preferredTenant availabilityStatus image contact mapCoordinates createdAt")
+                .select("title price location state roomType preferredTenant availabilityStatus image contact mapCoordinates createdAt listingType hostelFor roomSharingType availableBeds foodFacility")
                 .sort({ createdAt: -1 })
                 .lean()
         ]);
@@ -34,6 +34,12 @@ module.exports.getUserProfile = async (req, res, next) => {
                 imageUrl,
                 phone: doc.contact?.phone || "",
                 owner: userData.name,
+                listingType: doc.listingType || "PG",
+                hostelFor: doc.hostelFor || null,
+                roomSharingType: doc.roomSharingType || null,
+                availableBeds: doc.availableBeds !== undefined && doc.availableBeds !== null ? Number(doc.availableBeds) : null,
+                foodFacility: doc.foodFacility || null,
+                rentPerBed: doc.listingType === "Hostel" ? doc.price : null,
                 coordinates: {
                     lat: doc.mapCoordinates?.coordinates?.[1] ?? 28.6139,
                     lon: doc.mapCoordinates?.coordinates?.[0] ?? 77.2090

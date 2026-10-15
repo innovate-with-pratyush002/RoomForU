@@ -157,6 +157,7 @@ export const api = {
     async getAll(filters: ListingFilters = {}): Promise<ListingsApiResponse> {
       const searchParams = new URLSearchParams();
       if (filters.search) searchParams.set("search", filters.search);
+      if (filters.listingType) searchParams.set("listingType", filters.listingType);
       if (filters.roomType) searchParams.set("roomType", filters.roomType);
       if (filters.preferredTenant) searchParams.set("preferredTenant", filters.preferredTenant);
       if (filters.availabilityStatus) searchParams.set("availabilityStatus", filters.availabilityStatus);
