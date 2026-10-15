@@ -1,20 +1,59 @@
 require('dotenv').config();
 const cloudinary = require('cloudinary').v2;
-const { CloudinaryStorage } = require('multer-storage-cloudinary');
-
-// Configuration with Cloudinary
+// Configuration with Cloudinary SDK v2
 cloudinary.config({
     cloud_name: process.env.cloudName,
     api_key: process.env.apiKey,
     api_secret: process.env.apiSecret
 });
 
-const storage = new CloudinaryStorage({
-    cloudinary: cloudinary,
-    params: {
-        folder: "RoomForU",
-        formats: ["png", "jpg", "jpeg", "webp"]
-    },
+class CloudinaryCustomStorage {
+    constructor(opts = {}) {
+        this.cloudinary = opts.cloudinary || cloudinary;
+        this.folder = opts.folder || "RoomForU";
+        this.allowedFormats = opts.allowedFormats || ["png", "jpg", "jpeg", "webp"];
+    }
+
+    _handleFile(req, file, cb) {
+        const uploadStream = this.cloudinary.uploader.upload_stream(
+            {
+                folder: this.folder,
+                resource_type: "image",
+                allowed_formats: this.allowedFormats
+            },
+            (error, result) => {
+                if (error) {
+                    return cb(error);
+                }
+                cb(null, {
+                    path: result.secure_url,
+                    filename: result.public_id,
+                    size: result.bytes,
+                    format: result.format
+                });
+            }
+        );
+
+        file.stream.on("error", (err) => {
+            uploadStream.destroy(err);
+        });
+
+        file.stream.pipe(uploadStream);
+    }
+
+    _removeFile(req, file, cb) {
+        if (file && file.filename) {
+            this.cloudinary.uploader.destroy(file.filename, (err) => cb(err));
+        } else {
+            cb(null);
+        }
+    }
+}
+
+const storage = new CloudinaryCustomStorage({
+    cloudinary,
+    folder: "RoomForU",
+    allowedFormats: ["png", "jpg", "jpeg", "webp"]
 });
 
 // Helper to safely delete old or removed images from Cloudinary storage

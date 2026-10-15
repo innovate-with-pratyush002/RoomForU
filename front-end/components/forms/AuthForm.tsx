@@ -46,9 +46,11 @@ export function AuthForm({ mode }: AuthFormProps) {
       if (!name.trim()) return setError("Please enter your name.");
       if (!email.trim() || !email.includes("@")) return setError("Please enter a valid email address.");
       if (password.length < 6) return setError("Password must be at least 6 characters.");
+      if (password.length > 128) return setError("Password must not exceed 128 characters.");
     } else {
       if (!username.trim()) return setError("Please enter your username or email.");
       if (!password) return setError("Please enter your password.");
+      if (password.length > 128) return setError("Password must not exceed 128 characters.");
     }
 
     setLoading(true);
@@ -154,6 +156,7 @@ export function AuthForm({ mode }: AuthFormProps) {
             <input
               required
               type="password"
+              maxLength={128}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder={isSignup ? "Create a secure password" : "Enter your password"}

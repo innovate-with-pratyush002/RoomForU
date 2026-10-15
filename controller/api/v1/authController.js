@@ -25,17 +25,33 @@ module.exports.signup = async (req, res, next) => {
             throw new ExpressError(400, "Name, email, and password are required.");
         }
 
+        if (typeof name !== "string" || !name.trim()) {
+            throw new ExpressError(400, "Name must be a valid string.");
+        }
+
+        if (typeof email !== "string" || !email.trim()) {
+            throw new ExpressError(400, "Email must be a valid string.");
+        }
+
         const normalizedEmail = email.trim().toLowerCase();
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(normalizedEmail)) {
             throw new ExpressError(400, "Please provide a valid email address.");
         }
 
+        if (typeof password !== "string") {
+            throw new ExpressError(400, "Password must be a valid string.");
+        }
+
         if (password.length < 6) {
             throw new ExpressError(400, "Password must be at least 6 characters long.");
         }
 
-        const effectiveUsername = (username && username.trim()) ||
+        if (password.length > 128) {
+            throw new ExpressError(400, "Password must not exceed 128 characters.");
+        }
+
+        const effectiveUsername = (username && typeof username === "string" && username.trim()) ||
             `${normalizedEmail.split("@")[0]}_${Math.floor(1000 + Math.random() * 9000)}`;
 
         // Check if email already registered
@@ -69,7 +85,8 @@ module.exports.signup = async (req, res, next) => {
 // POST /api/v1/auth/signin
 module.exports.signin = async (req, res, next) => {
     try {
-        const identifier = (req.body.username || req.body.email || "").trim();
+        const rawIdentifier = req.body.username || req.body.email || "";
+        const identifier = typeof rawIdentifier === "string" ? rawIdentifier.trim() : "";
         const password = req.body.password;
 
         if (!identifier || !password) {
@@ -77,6 +94,22 @@ module.exports.signin = async (req, res, next) => {
                 success: false,
                 status: 400,
                 message: "Username/email and password are required."
+            });
+        }
+
+        if (typeof password !== "string") {
+            return res.status(400).json({
+                success: false,
+                status: 400,
+                message: "Password must be a valid string."
+            });
+        }
+
+        if (password.length > 128) {
+            return res.status(400).json({
+                success: false,
+                status: 400,
+                message: "Password must not exceed 128 characters."
             });
         }
 

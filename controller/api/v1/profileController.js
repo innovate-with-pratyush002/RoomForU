@@ -94,6 +94,9 @@ module.exports.deleteUserAccount = async (req, res, next) => {
 
         // Optional password verification if account uses local password
         if (password && typeof user.authenticate === "function") {
+            if (typeof password !== "string" || password.length > 128) {
+                throw new ExpressError(400, "Password must not exceed 128 characters.");
+            }
             const authResult = await new Promise((resolve) => {
                 user.authenticate(password, (authErr, authenticatedUser) => {
                     resolve(!authErr && Boolean(authenticatedUser));

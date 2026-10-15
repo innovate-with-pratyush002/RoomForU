@@ -22,7 +22,7 @@
   },
   "homepage": "https://github.com/innovate-with-pratyush002/StudentRoomHub#readme",
   "dependencies": {
-    "cloudinary": "^1.41.3",
+    "cloudinary": "^2.11.0",
     "connect-mongo": "^6.0.0",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.6",
@@ -34,7 +34,6 @@
     "mongoose": "^8.15.1",
     "mongoose-findorcreate": "^4.0.0",
     "multer": "^2.0.2",
-    "multer-storage-cloudinary": "^4.0.0",
     "passport": "^0.7.0",
     "passport-google-oauth20": "^2.0.0",
     "passport-local": "^1.0.0",
@@ -42,5 +41,10 @@
   },
   "devDependencies": {
     "nodemon": "^3.1.11"
+  },
+  "overrides": {
+    "chokidar": {
+      "braces": "^3.0.3"
+    }
   }
 }
