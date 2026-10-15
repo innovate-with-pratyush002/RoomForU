@@ -76,6 +76,12 @@ const errorHandler = (err, req, res, next) => {
         return next(err);
     }
 
+    // In production, sanitize 500 error messages to prevent leaking database/system internals
+    if (status >= 500 && process.env.NODE_ENV === "production") {
+        message = "An unexpected server error occurred. Please try again later.";
+        details = null;
+    }
+
     // Return structured JSON for all requests
     return res.status(status).json({
         success: false,

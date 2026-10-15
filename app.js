@@ -43,7 +43,14 @@ app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 app.use(csrfProtection);
 
 // 4. Session & Persistent Store Configuration
+const isProduction = process.env.NODE_ENV === "production";
 const sessionSecret = process.env.SESSION_SECRET || "fallback_development_session_secret_key_2025";
+
+if (isProduction && (!process.env.SESSION_SECRET || process.env.SESSION_SECRET === "fallback_development_session_secret_key_2025")) {
+    console.error("FATAL ERROR: In production, SESSION_SECRET environment variable must be set to a secure random string.");
+    process.exit(1);
+}
+
 const mongoUrl = process.env.MONGO_URI;
 
 let store;
@@ -64,8 +71,6 @@ if (mongoUrl) {
         });
     }
 }
-
-const isProduction = process.env.NODE_ENV === "production";
 
 const sessionDetail = {
     ...(store ? { store } : {}),
@@ -102,6 +107,7 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
             async (accessToken, refreshToken, profile, done) => {
                 try {
                     const email = profile.emails?.[0]?.value;
+                    const isEmailVerified = profile.emails?.[0]?.verified !== false;
 
                     // 1. Find by googleId
                     let user = await userAuth.findOne({ googleId: profile.id });
@@ -109,8 +115,8 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
                         return done(null, user);
                     }
 
-                    // 2. Find by matching email
-                    if (email) {
+                    // 2. Find by matching verified email
+                    if (email && isEmailVerified) {
                         user = await userAuth.findOne({ email });
                         if (user) {
                             user.googleId = profile.id;

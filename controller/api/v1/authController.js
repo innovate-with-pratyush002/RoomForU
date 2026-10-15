@@ -121,6 +121,13 @@ module.exports.logout = (req, res, next) => {
         if (err) return next(err);
 
         const cookieName = process.env.SESSION_COOKIE_NAME || "roomforu.sid";
+        const isProduction = process.env.NODE_ENV === "production";
+        const cookieOptions = {
+            path: "/",
+            httpOnly: true,
+            secure: isProduction,
+            sameSite: isProduction ? "none" : "lax"
+        };
 
         // Destroy session store data if active
         if (req.session) {
@@ -128,8 +135,8 @@ module.exports.logout = (req, res, next) => {
                 if (destroyErr) {
                     console.error("Session destroy error during logout:", destroyErr);
                 }
-                res.clearCookie(cookieName, { path: "/" });
-                res.clearCookie("connect.sid", { path: "/" });
+                res.clearCookie(cookieName, cookieOptions);
+                res.clearCookie("connect.sid", cookieOptions);
                 return res.status(200).json({
                     success: true,
                     status: 200,
@@ -137,8 +144,8 @@ module.exports.logout = (req, res, next) => {
                 });
             });
         } else {
-            res.clearCookie(cookieName, { path: "/" });
-            res.clearCookie("connect.sid", { path: "/" });
+            res.clearCookie(cookieName, cookieOptions);
+            res.clearCookie("connect.sid", cookieOptions);
             return res.status(200).json({
                 success: true,
                 status: 200,
@@ -169,18 +176,26 @@ module.exports.currentUser = (req, res) => {
 
 // GET /api/v1/auth/google/callback handler
 module.exports.googleCallback = (req, res) => {
-    const returnTo = req.session?.returnTo || "/listings";
+    let returnTo = req.session?.returnTo || "/listings";
     delete req.session?.returnTo;
+
+    // Validate returnTo strictly as a safe relative path
+    if (
+        typeof returnTo !== "string" ||
+        !returnTo.startsWith("/") ||
+        returnTo.startsWith("//") ||
+        returnTo.includes("\\") ||
+        returnTo.includes("://")
+    ) {
+        returnTo = "/listings";
+    }
 
     const frontendBase =
         process.env.FRONTEND_URL && !process.env.FRONTEND_URL.includes("localhost:5000")
             ? process.env.FRONTEND_URL
             : "http://localhost:3000";
 
-    const targetUrl = returnTo.startsWith("http")
-        ? returnTo
-        : `${frontendBase}${returnTo.startsWith("/") ? returnTo : `/${returnTo}`}`;
-
+    const targetUrl = `${frontendBase}${returnTo}`;
     return res.redirect(targetUrl);
 };
 

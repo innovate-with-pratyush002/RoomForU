@@ -3,6 +3,27 @@ const Review = require("../../../models/review.js");
 const ExpressError = require("../../../utils/ExpressError.js");
 const { destroyCloudinaryImage } = require("../../../cloudConfig.js");
 
+// Escape regex special characters to prevent ReDoS and query crashes
+const escapeRegex = (string) => {
+    return typeof string === "string" ? string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") : "";
+};
+
+// Validate geographical coordinates
+const isValidCoordinates = (coords) => {
+    if (!Array.isArray(coords) || coords.length !== 2) return false;
+    const [lon, lat] = coords;
+    return (
+        typeof lon === "number" &&
+        typeof lat === "number" &&
+        !isNaN(lon) &&
+        !isNaN(lat) &&
+        lon >= -180 &&
+        lon <= 180 &&
+        lat >= -90 &&
+        lat <= 90
+    );
+};
+
 // Formatter to provide clean, normalized responses compatible with both Next.js frontend and standard REST clients
 const formatListingResponse = (listing) => {
     if (!listing) return null;
@@ -83,10 +104,10 @@ module.exports.getAllListings = async (req, res, next) => {
 
         const filter = {};
 
-        // Flexible search across title, location, state, and description
-        if (search && search.trim()) {
-            const term = search.trim();
-            const searchRegex = { $regex: term, $options: "i" };
+        // Safe flexible search with escaped regex to prevent ReDoS / query crashes
+        if (typeof search === "string" && search.trim()) {
+            const escapedTerm = escapeRegex(search.trim());
+            const searchRegex = { $regex: escapedTerm, $options: "i" };
             filter.$or = [
                 { title: searchRegex },
                 { location: searchRegex },
@@ -95,20 +116,37 @@ module.exports.getAllListings = async (req, res, next) => {
             ];
         }
 
-        // Room and Tenant filters
-        if (roomType) filter.roomType = roomType;
-        if (preferredTenant) filter.preferredTenant = preferredTenant;
-        if (availabilityStatus) filter.availabilityStatus = availabilityStatus;
+        // Room and Tenant filters with strict enum type coercion to prevent NoSQL operator injection
+        const allowedRoomTypes = ["Single", "Double", "Shared"];
+        if (typeof roomType === "string" && allowedRoomTypes.includes(roomType.trim())) {
+            filter.roomType = roomType.trim();
+        }
 
-        // Location filters (case-insensitive substring)
-        if (location) filter.location = { $regex: location.trim(), $options: "i" };
-        if (state) filter.state = { $regex: state.trim(), $options: "i" };
+        const allowedTenantTypes = ["Boys", "Girls", "Any"];
+        if (typeof preferredTenant === "string" && allowedTenantTypes.includes(preferredTenant.trim())) {
+            filter.preferredTenant = preferredTenant.trim();
+        }
+
+        const allowedAvailability = ["Available", "Booked"];
+        if (typeof availabilityStatus === "string" && allowedAvailability.includes(availabilityStatus.trim())) {
+            filter.availabilityStatus = availabilityStatus.trim();
+        }
+
+        // Location filters with escaped substrings
+        if (typeof location === "string" && location.trim()) {
+            filter.location = { $regex: escapeRegex(location.trim()), $options: "i" };
+        }
+        if (typeof state === "string" && state.trim()) {
+            filter.state = { $regex: escapeRegex(state.trim()), $options: "i" };
+        }
 
         // Price range
-        if (minPrice || maxPrice) {
+        const parsedMin = minPrice !== undefined ? Number(minPrice) : null;
+        const parsedMax = maxPrice !== undefined ? Number(maxPrice) : null;
+        if ((parsedMin !== null && !isNaN(parsedMin)) || (parsedMax !== null && !isNaN(parsedMax))) {
             filter.price = {};
-            if (minPrice) filter.price.$gte = Number(minPrice);
-            if (maxPrice) filter.price.$lte = Number(maxPrice);
+            if (parsedMin !== null && !isNaN(parsedMin)) filter.price.$gte = parsedMin;
+            if (parsedMax !== null && !isNaN(parsedMax)) filter.price.$lte = parsedMax;
         }
 
         // Sorting
@@ -125,7 +163,7 @@ module.exports.getAllListings = async (req, res, next) => {
             Listing.countDocuments(filter),
             Listing.find(filter)
                 .select("title price location state roomType preferredTenant availabilityStatus image user createdAt mapCoordinates")
-                .populate("user", "name email picture")
+                .populate("user", "name picture") // Privacy: Do not leak host personal email on public feed
                 .sort(sortOption)
                 .skip(skip)
                 .limit(limitNum)
@@ -196,6 +234,40 @@ module.exports.createListing = async (req, res, next) => {
             throw new ExpressError(400, "Missing required listing fields: title, price, location, state, roomType, preferredTenant, and contact phone are required.");
         }
 
+        // Validate lengths and ranges
+        if (typeof title !== "string" || title.trim().length < 3 || title.trim().length > 200) {
+            throw new ExpressError(400, "Title must be between 3 and 200 characters.");
+        }
+        if (description && (typeof description !== "string" || description.trim().length > 5000)) {
+            throw new ExpressError(400, "Description cannot exceed 5000 characters.");
+        }
+        const numericPrice = Number(price);
+        if (isNaN(numericPrice) || numericPrice <= 0 || numericPrice > 10000000) {
+            throw new ExpressError(400, "Price must be a valid positive number up to 10,000,000.");
+        }
+        if (typeof location !== "string" || location.trim().length < 2 || location.trim().length > 100) {
+            throw new ExpressError(400, "Location must be between 2 and 100 characters.");
+        }
+        if (typeof state !== "string" || state.trim().length < 2 || state.trim().length > 100) {
+            throw new ExpressError(400, "State must be between 2 and 100 characters.");
+        }
+        const validRoomTypes = ["Single Room", "Shared Room", "1 BHK", "2 BHK", "3 BHK", "PG"];
+        if (!validRoomTypes.includes(roomType)) {
+            throw new ExpressError(400, `Invalid roomType. Allowed: ${validRoomTypes.join(", ")}`);
+        }
+        const validTenants = ["Students", "Working Professionals", "Family", "Any"];
+        if (!validTenants.includes(preferredTenant)) {
+            throw new ExpressError(400, `Invalid preferredTenant. Allowed: ${validTenants.join(", ")}`);
+        }
+        const validStatus = ["Available", "Rented"];
+        if (!validStatus.includes(availabilityStatus)) {
+            throw new ExpressError(400, `Invalid availabilityStatus. Allowed: ${validStatus.join(", ")}`);
+        }
+        const cleanPhone = String(contactPhone).trim();
+        if (cleanPhone.length < 7 || cleanPhone.length > 20) {
+            throw new ExpressError(400, "Contact phone must be between 7 and 20 characters.");
+        }
+
         // Coordinates resolution
         let coordinates = [77.2090, 28.6139]; // Default coordinates (Delhi)
         if (payload.mapCoordinates && Array.isArray(payload.mapCoordinates.coordinates)) {
@@ -208,6 +280,9 @@ module.exports.createListing = async (req, res, next) => {
             const lon = parseFloat(payload.lon);
             const lat = parseFloat(payload.lat);
             if (!isNaN(lon) && !isNaN(lat)) coordinates = [lon, lat];
+        }
+        if (!isValidCoordinates(coordinates)) {
+            coordinates = [77.2090, 28.6139];
         }
 
         // Image resolution
@@ -224,13 +299,13 @@ module.exports.createListing = async (req, res, next) => {
         const newListing = new Listing({
             title: title.trim(),
             description: (description || "").trim(),
-            price: Number(price),
+            price: numericPrice,
             location: location.trim(),
             state: state.trim(),
             roomType,
             preferredTenant,
             availabilityStatus,
-            contact: { phone: String(contactPhone).trim() },
+            contact: { phone: cleanPhone },
             user: req.user._id,
             image: { url, fileName },
             mapCoordinates: {
@@ -261,35 +336,87 @@ module.exports.updateListing = async (req, res, next) => {
         const payload = req.body.place || req.body;
 
         const updateData = {};
-        if (payload.title !== undefined) updateData.title = payload.title.trim();
-        if (payload.description !== undefined) updateData.description = payload.description.trim();
-        if (payload.price !== undefined) updateData.price = Number(payload.price);
-        if (payload.location !== undefined) updateData.location = payload.location.trim();
-        if (payload.state !== undefined) updateData.state = payload.state.trim();
-        if (payload.roomType !== undefined) updateData.roomType = payload.roomType;
-        if (payload.preferredTenant !== undefined) updateData.preferredTenant = payload.preferredTenant;
-        if (payload.availabilityStatus !== undefined) updateData.availabilityStatus = payload.availabilityStatus;
+        if (payload.title !== undefined) {
+            if (typeof payload.title !== "string" || payload.title.trim().length < 3 || payload.title.trim().length > 200) {
+                throw new ExpressError(400, "Title must be between 3 and 200 characters.");
+            }
+            updateData.title = payload.title.trim();
+        }
+        if (payload.description !== undefined) {
+            if (typeof payload.description !== "string" || payload.description.trim().length > 5000) {
+                throw new ExpressError(400, "Description cannot exceed 5000 characters.");
+            }
+            updateData.description = payload.description.trim();
+        }
+        if (payload.price !== undefined) {
+            const numPrice = Number(payload.price);
+            if (isNaN(numPrice) || numPrice <= 0 || numPrice > 10000000) {
+                throw new ExpressError(400, "Price must be a valid positive number up to 10,000,000.");
+            }
+            updateData.price = numPrice;
+        }
+        if (payload.location !== undefined) {
+            if (typeof payload.location !== "string" || payload.location.trim().length < 2 || payload.location.trim().length > 100) {
+                throw new ExpressError(400, "Location must be between 2 and 100 characters.");
+            }
+            updateData.location = payload.location.trim();
+        }
+        if (payload.state !== undefined) {
+            if (typeof payload.state !== "string" || payload.state.trim().length < 2 || payload.state.trim().length > 100) {
+                throw new ExpressError(400, "State must be between 2 and 100 characters.");
+            }
+            updateData.state = payload.state.trim();
+        }
+        if (payload.roomType !== undefined) {
+            const validRoomTypes = ["Single Room", "Shared Room", "1 BHK", "2 BHK", "3 BHK", "PG"];
+            if (!validRoomTypes.includes(payload.roomType)) {
+                throw new ExpressError(400, `Invalid roomType. Allowed: ${validRoomTypes.join(", ")}`);
+            }
+            updateData.roomType = payload.roomType;
+        }
+        if (payload.preferredTenant !== undefined) {
+            const validTenants = ["Students", "Working Professionals", "Family", "Any"];
+            if (!validTenants.includes(payload.preferredTenant)) {
+                throw new ExpressError(400, `Invalid preferredTenant. Allowed: ${validTenants.join(", ")}`);
+            }
+            updateData.preferredTenant = payload.preferredTenant;
+        }
+        if (payload.availabilityStatus !== undefined) {
+            const validStatus = ["Available", "Rented"];
+            if (!validStatus.includes(payload.availabilityStatus)) {
+                throw new ExpressError(400, `Invalid availabilityStatus. Allowed: ${validStatus.join(", ")}`);
+            }
+            updateData.availabilityStatus = payload.availabilityStatus;
+        }
 
         const contactPhone = typeof payload.contact === "object" ? payload.contact.phone : (payload.contact || payload.phone);
         if (contactPhone !== undefined) {
-            updateData.contact = { phone: String(contactPhone).trim() };
+            const cleanPhone = String(contactPhone).trim();
+            if (cleanPhone.length < 7 || cleanPhone.length > 20) {
+                throw new ExpressError(400, "Contact phone must be between 7 and 20 characters.");
+            }
+            updateData.contact = { phone: cleanPhone };
         }
 
         // Coordinates resolution
+        let updateCoords = null;
         if (payload.mapCoordinates && Array.isArray(payload.mapCoordinates.coordinates)) {
-            updateData.mapCoordinates = payload.mapCoordinates;
+            updateCoords = payload.mapCoordinates.coordinates;
         } else if (payload.coordinates && typeof payload.coordinates === "object") {
             const lon = parseFloat(payload.coordinates.lon);
             const lat = parseFloat(payload.coordinates.lat);
             if (!isNaN(lon) && !isNaN(lat)) {
-                updateData.mapCoordinates = { type: "Point", coordinates: [lon, lat] };
+                updateCoords = [lon, lat];
             }
         } else if (payload.lon !== undefined && payload.lat !== undefined) {
             const lon = parseFloat(payload.lon);
             const lat = parseFloat(payload.lat);
             if (!isNaN(lon) && !isNaN(lat)) {
-                updateData.mapCoordinates = { type: "Point", coordinates: [lon, lat] };
+                updateCoords = [lon, lat];
             }
+        }
+        if (updateCoords && isValidCoordinates(updateCoords)) {
+            updateData.mapCoordinates = { type: "Point", coordinates: updateCoords };
         }
 
         if (req.file) {
@@ -363,6 +490,10 @@ module.exports.createReview = async (req, res, next) => {
             throw new ExpressError(400, "Review comment and rating (1-5) are required.");
         }
 
+        if (typeof comment !== "string" || comment.trim().length === 0 || comment.trim().length > 1000) {
+            throw new ExpressError(400, "Review comment must be between 1 and 1000 characters.");
+        }
+
         const ratingNum = Number(rating);
         if (isNaN(ratingNum) || ratingNum < 1 || ratingNum > 5) {
             throw new ExpressError(400, "Rating must be a number between 1 and 5.");
@@ -411,7 +542,7 @@ module.exports.deleteReview = async (req, res, next) => {
         const { id, reviewId } = req.params;
 
         await Promise.all([
-            Listing.findByIdAndUpdate(id, { $pull: { reviews: reviewId } }),
+            Listing.updateMany({ reviews: reviewId }, { $pull: { reviews: reviewId } }),
             Review.findByIdAndDelete(reviewId)
         ]);
 

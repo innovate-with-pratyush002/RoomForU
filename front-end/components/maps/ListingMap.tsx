@@ -88,14 +88,22 @@ export default function ListingMap({ lat, lon, title, location }: ListingMapProp
         popupAnchor: [0, -34],
       });
 
-    // Add listing marker
+    // Add listing marker with safe DOM popup to prevent XSS
     const listingMarker = L.marker([validLat, validLon], { icon: createPin("#2563eb") }).addTo(map);
-    listingMarker.bindPopup(`
-      <div style="font-family: inherit; padding: 2px 1px;">
-        <h4 style="margin: 0 0 3px 0; font-size: 13px; font-weight: 700; color: #0f172a;">${title}</h4>
-        <p style="margin: 0; font-size: 12px; color: #64748b;">${location}</p>
-      </div>
-    `);
+    const popupContent = document.createElement("div");
+    popupContent.style.cssText = "font-family: inherit; padding: 2px 1px;";
+
+    const popupTitle = document.createElement("h4");
+    popupTitle.style.cssText = "margin: 0 0 3px 0; font-size: 13px; font-weight: 700; color: #0f172a;";
+    popupTitle.textContent = title;
+
+    const popupLoc = document.createElement("p");
+    popupLoc.style.cssText = "margin: 0; font-size: 12px; color: #64748b;";
+    popupLoc.textContent = location;
+
+    popupContent.appendChild(popupTitle);
+    popupContent.appendChild(popupLoc);
+    listingMarker.bindPopup(popupContent);
 
     // Invalidate size once DOM finishes painting so drag/pan tiles work immediately
     const invalidateTimer = setTimeout(() => {

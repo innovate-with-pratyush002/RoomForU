@@ -33,12 +33,16 @@ router.get("/me", authController.currentUser);
 router.get(
     "/google",
     (req, res, next) => {
-        if (req.query.returnTo) {
-            req.session.returnTo = req.query.returnTo;
+        if (typeof req.query.returnTo === "string") {
+            const raw = req.query.returnTo.trim();
+            // Allow only safe relative paths starting with a single '/'
+            if (raw.startsWith("/") && !raw.startsWith("//") && !raw.includes("\\")) {
+                req.session.returnTo = raw;
+            }
         }
         next();
     },
-    passport.authenticate("google", { scope: ["profile", "email"] })
+    passport.authenticate("google", { scope: ["profile", "email"], state: true })
 );
 
 // Google OAuth Callback

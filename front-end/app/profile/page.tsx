@@ -155,12 +155,12 @@ export default function ProfilePage() {
       <section className="border-b border-slate-200/80 bg-white px-4 py-10 shadow-xs">
         <div className="mx-auto max-w-5xl">
           <div className="flex flex-col items-center gap-4 text-center sm:flex-row sm:items-start sm:text-left">
-            <div className="flex size-20 items-center justify-center rounded-3xl bg-teal-700 text-2xl font-black text-white shadow-md sm:size-24 sm:text-3xl">
+            <div className="flex size-20 items-center justify-center rounded-full bg-teal-700 text-2xl font-black text-white shadow-md sm:size-24 sm:text-3xl">
               {user?.picture ? (
                 <img
                   src={user.picture}
                   alt={user.name}
-                  className="size-full rounded-3xl object-cover"
+                  className="size-full rounded-full object-cover"
                 />
               ) : (
                 (user?.name || "U").charAt(0).toUpperCase()

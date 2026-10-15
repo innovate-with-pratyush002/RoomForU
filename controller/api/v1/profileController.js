@@ -110,10 +110,17 @@ module.exports.deleteUserAccount = async (req, res, next) => {
             }
 
             const cookieName = process.env.SESSION_COOKIE_NAME || "roomforu.sid";
+            const isProduction = process.env.NODE_ENV === "production";
+            const cookieOptions = {
+                path: "/",
+                httpOnly: true,
+                secure: isProduction,
+                sameSite: isProduction ? "none" : "lax"
+            };
 
             const sendResponse = () => {
-                res.clearCookie(cookieName, { path: "/" });
-                res.clearCookie("connect.sid", { path: "/" });
+                res.clearCookie(cookieName, cookieOptions);
+                res.clearCookie("connect.sid", cookieOptions);
 
                 return res.status(200).json({
                     success: true,

@@ -5,8 +5,11 @@ const rateLimit = require("express-rate-limit");
 // Determine allowed origins for CORS and CSRF validation
 const allowedOrigins = [
     process.env.FRONTEND_URL,
+    process.env.NEXT_PUBLIC_APP_URL,
     "http://localhost:3000",
     "http://127.0.0.1:3000",
+    "http://localhost:3001",
+    "http://127.0.0.1:3001",
     "http://localhost:5000",
     "http://127.0.0.1:5000",
     "https://roomforu.onrender.com"
@@ -63,8 +66,13 @@ const helmetMiddleware = helmet({
 // 2. CORS allowlist configuration
 const corsOptions = {
     origin: function (origin, callback) {
-        // Allow requests with no origin, null origin (redirects, file://, privacy mode), or in development
-        if (!origin || origin === "null" || process.env.NODE_ENV !== "production") {
+        // Allow requests with no origin (mobile apps, server-to-server, direct curl)
+        if (!origin) {
+            return callback(null, true);
+        }
+
+        // Allow localhost / local development origins in non-production
+        if (process.env.NODE_ENV !== "production") {
             return callback(null, true);
         }
 
@@ -161,7 +169,14 @@ const csrfProtection = (req, res, next) => {
         });
     };
 
-    if (origin && origin !== "null") {
+    if (origin) {
+        if (origin === "null") {
+            return res.status(403).json({
+                success: false,
+                status: 403,
+                message: "CSRF check failed: Null origin is not permitted."
+            });
+        }
         try {
             const originHost = new URL(origin).host;
             if (isHostAllowed(originHost)) {
