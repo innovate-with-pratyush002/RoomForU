@@ -10,7 +10,7 @@ const formatUserResponse = (user) => {
         _id: user._id.toString(),
         name: user.name,
         email: user.email,
-        username: user.username,
+        username: user.username || (user.email ? user.email.split("@")[0] : null),
         picture: user.picture || null,
         createdAt: user.createdAt
     };

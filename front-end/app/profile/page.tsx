@@ -11,7 +11,8 @@ import {
   AlertCircle,
   LogIn,
   Trash2,
-  ShieldAlert
+  ShieldAlert,
+  AtSign
 } from "lucide-react";
 import { api } from "@/lib/api";
 import { ListingCard } from "@/components/listings/ListingCard";
@@ -149,6 +150,9 @@ export default function ProfilePage() {
     })
     : "Verified Member";
 
+  const displayUsername =
+    user?.username || (user?.email ? user.email.split("@")[0] : "user");
+
   return (
     <div className="pb-20">
       {/* Profile Header Banner */}
@@ -168,12 +172,26 @@ export default function ProfilePage() {
             </div>
 
             <div className="flex-1">
-              <span className="inline-flex items-center gap-1 rounded-full bg-teal-50 px-3 py-1 text-xs font-bold text-teal-800">
-                <UserCheck size={13} /> Active Host
-              </span>
+              <div className="flex flex-wrap items-center justify-center gap-2 sm:justify-start">
+                <span className="inline-flex items-center gap-1 rounded-full bg-teal-50 px-3 py-1 text-xs font-bold text-teal-800">
+                  <UserCheck size={13} /> Active Host
+                </span>
+                {displayUsername && (
+                  <span className="inline-flex items-center gap-1 rounded-full border border-teal-200/80 bg-teal-50/70 px-3 py-0.5 text-xs font-semibold text-teal-800">
+                    <AtSign size={13} className="text-teal-600" />
+                    {displayUsername}
+                  </span>
+                )}
+              </div>
+
               <h1 className="mt-2 text-3xl font-black text-slate-900 sm:text-4xl">
                 {user?.name || "User"}
               </h1>
+              {displayUsername && (
+                <p className="mt-0.5 text-sm font-semibold text-teal-700">
+                  @{displayUsername}
+                </p>
+              )}
 
               <div className="mt-3 flex flex-wrap items-center justify-center gap-4 text-xs font-semibold text-slate-600 sm:justify-start">
                 <span className="flex items-center gap-1.5">
@@ -199,6 +217,65 @@ export default function ProfilePage() {
                 <PlusCircle size={15} />
                 Add New Listing
               </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Account Overview Cards */}
+      <section className="mx-auto max-w-[1400px] px-4 pt-8 sm:px-6">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-xs transition hover:shadow-sm">
+            <div className="flex items-center gap-3.5">
+              <div className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-teal-50 text-teal-700">
+                <AtSign size={20} />
+              </div>
+              <div className="min-w-0">
+                <p className="text-xs font-bold uppercase tracking-wider text-slate-400">Username</p>
+                <p className="truncate text-base font-extrabold text-slate-900">
+                  @{displayUsername}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-xs transition hover:shadow-sm">
+            <div className="flex items-center gap-3.5">
+              <div className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-teal-50 text-teal-700">
+                <Mail size={20} />
+              </div>
+              <div className="min-w-0">
+                <p className="text-xs font-bold uppercase tracking-wider text-slate-400">Email Address</p>
+                <p className="truncate text-base font-extrabold text-slate-900" title={user?.email}>
+                  {user?.email || "Not provided"}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-xs transition hover:shadow-sm">
+            <div className="flex items-center gap-3.5">
+              <div className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-teal-50 text-teal-700">
+                <Calendar size={20} />
+              </div>
+              <div className="min-w-0">
+                <p className="text-xs font-bold uppercase tracking-wider text-slate-400">Member Since</p>
+                <p className="truncate text-base font-extrabold text-slate-900">{joinDate}</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-xs transition hover:shadow-sm">
+            <div className="flex items-center gap-3.5">
+              <div className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-teal-50 text-teal-700">
+                <Building size={20} />
+              </div>
+              <div className="min-w-0">
+                <p className="text-xs font-bold uppercase tracking-wider text-slate-400">My Properties</p>
+                <p className="text-base font-extrabold text-slate-900">
+                  {listings.length} Active {listings.length === 1 ? "Listing" : "Listings"}
+                </p>
+              </div>
             </div>
           </div>
         </div>

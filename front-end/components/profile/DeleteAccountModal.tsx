@@ -49,7 +49,7 @@ export function DeleteAccountModal({
 
   if (!isOpen) return null;
 
-  const username = user?.username || "";
+  const username = user?.username || (user?.email ? user.email.split("@")[0] : "");
   const expectedConfirmation = "DELETE";
 
   const isConfirmed =

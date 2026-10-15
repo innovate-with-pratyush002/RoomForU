@@ -54,7 +54,7 @@ module.exports.getUserProfile = async (req, res, next) => {
                 id: userData._id.toString(),
                 name: userData.name,
                 email: userData.email,
-                username: userData.username,
+                username: userData.username || (userData.email ? userData.email.split("@")[0] : null),
                 picture: userData.picture || null,
                 createdAt: userData.createdAt
             },
