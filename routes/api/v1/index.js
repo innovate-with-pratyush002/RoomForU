@@ -17,6 +17,13 @@ router.get("/", (req, res) => {
         endpoints: {
             health: "GET /api/v1/health",
             auth: {
+                requestSignupOtp: "POST /api/v1/auth/signup/request-otp",
+                resendSignupOtp: "POST /api/v1/auth/signup/resend-otp",
+                verifySignupOtp: "POST /api/v1/auth/signup/verify",
+                requestPasswordResetOtp: "POST /api/v1/auth/password-reset/request-otp",
+                resendPasswordResetOtp: "POST /api/v1/auth/password-reset/resend-otp",
+                verifyPasswordResetOtp: "POST /api/v1/auth/password-reset/verify-otp",
+                confirmPasswordReset: "POST /api/v1/auth/password-reset/confirm",
                 signup: "POST /api/v1/auth/signup",
                 signin: "POST /api/v1/auth/signin",
                 logout: "POST /api/v1/auth/logout",

@@ -107,31 +107,28 @@ export default async function ListingsPage({ searchParams }: PageProps) {
                 </span>
                 <Link
                   href={createQueryUrl({ listingType: undefined, page: "1" })}
-                  className={`rounded-full px-3 py-1 text-xs font-bold transition ${
-                    !listingType
-                      ? "bg-slate-900 text-white shadow-xs"
-                      : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-                  }`}
+                  className={`rounded-full px-3 py-1 text-xs font-bold transition ${!listingType
+                    ? "bg-teal-700 text-white shadow-xs"
+                    : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                    }`}
                 >
                   All
                 </Link>
                 <Link
                   href={createQueryUrl({ listingType: "PG", page: "1" })}
-                  className={`rounded-full px-3 py-1 text-xs font-bold transition ${
-                    listingType === "PG"
-                      ? "bg-teal-700 text-white shadow-xs"
-                      : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-                  }`}
+                  className={`rounded-full px-3 py-1 text-xs font-bold transition ${listingType === "PG"
+                    ? "bg-teal-700 text-white shadow-xs"
+                    : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                    }`}
                 >
                   PG
                 </Link>
                 <Link
                   href={createQueryUrl({ listingType: "Hostel", page: "1" })}
-                  className={`rounded-full px-3 py-1 text-xs font-bold transition ${
-                    listingType === "Hostel"
-                      ? "bg-teal-700 text-white shadow-xs"
-                      : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-                  }`}
+                  className={`rounded-full px-3 py-1 text-xs font-bold transition ${listingType === "Hostel"
+                    ? "bg-teal-700 text-white shadow-xs"
+                    : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                    }`}
                 >
                   Hostel
                 </Link>
@@ -142,11 +139,10 @@ export default async function ListingsPage({ searchParams }: PageProps) {
               </span>
               <Link
                 href={createQueryUrl({ roomType: undefined, page: "1" })}
-                className={`rounded-full px-3 py-1 text-xs font-semibold transition ${
-                  !roomType
-                    ? "bg-teal-700 text-white"
-                    : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-                }`}
+                className={`rounded-full px-3 py-1 text-xs font-semibold transition ${!roomType
+                  ? "bg-teal-700 text-white"
+                  : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                  }`}
               >
                 All
               </Link>
@@ -154,11 +150,10 @@ export default async function ListingsPage({ searchParams }: PageProps) {
                 <Link
                   key={type}
                   href={createQueryUrl({ roomType: type, page: "1" })}
-                  className={`rounded-full px-3 py-1 text-xs font-semibold transition ${
-                    roomType === type
-                      ? "bg-teal-700 text-white"
-                      : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-                  }`}
+                  className={`rounded-full px-3 py-1 text-xs font-semibold transition ${roomType === type
+                    ? "bg-teal-700 text-white"
+                    : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                    }`}
                 >
                   {type}
                 </Link>
@@ -169,11 +164,10 @@ export default async function ListingsPage({ searchParams }: PageProps) {
               </span>
               <Link
                 href={createQueryUrl({ preferredTenant: undefined, page: "1" })}
-                className={`rounded-full px-3 py-1 text-xs font-semibold transition ${
-                  !preferredTenant
-                    ? "bg-teal-700 text-white"
-                    : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-                }`}
+                className={`rounded-full px-3 py-1 text-xs font-semibold transition ${!preferredTenant
+                  ? "bg-teal-700 text-white"
+                  : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                  }`}
               >
                 All
               </Link>
@@ -181,11 +175,10 @@ export default async function ListingsPage({ searchParams }: PageProps) {
                 <Link
                   key={tenant}
                   href={createQueryUrl({ preferredTenant: tenant, page: "1" })}
-                  className={`rounded-full px-3 py-1 text-xs font-semibold transition ${
-                    preferredTenant === tenant
-                      ? "bg-teal-700 text-white"
-                      : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-                  }`}
+                  className={`rounded-full px-3 py-1 text-xs font-semibold transition ${preferredTenant === tenant
+                    ? "bg-teal-700 text-white"
+                    : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                    }`}
                 >
                   {tenant}
                 </Link>
@@ -222,10 +215,10 @@ export default async function ListingsPage({ searchParams }: PageProps) {
               {search
                 ? `Search results for "${search}"`
                 : listingType === "Hostel"
-                ? "Verified Student & Commercial Hostels"
-                : listingType === "PG"
-                ? "Available PG Accommodations"
-                : "Available Student Rooms & Hostels"}
+                  ? "Verified Student & Commercial Hostels"
+                  : listingType === "PG"
+                    ? "Available PG Accommodations"
+                    : "Available Student Rooms & Hostels"}
             </h2>
             <p className="text-xs font-medium text-slate-500">
               Verified accommodations for students and working professionals
@@ -274,9 +267,8 @@ export default async function ListingsPage({ searchParams }: PageProps) {
             <Link
               href={createQueryUrl({ page: String(Math.max(1, page - 1)) })}
               aria-disabled={page <= 1}
-              className={`flex items-center gap-1 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-bold text-slate-700 shadow-xs transition ${
-                page <= 1 ? "pointer-events-none opacity-40" : "hover:bg-slate-50"
-              }`}
+              className={`flex items-center gap-1 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-bold text-slate-700 shadow-xs transition ${page <= 1 ? "pointer-events-none opacity-40" : "hover:bg-slate-50"
+                }`}
             >
               <ChevronLeft size={16} />
               Previous
@@ -289,9 +281,8 @@ export default async function ListingsPage({ searchParams }: PageProps) {
             <Link
               href={createQueryUrl({ page: String(Math.min(totalPages, page + 1)) })}
               aria-disabled={page >= totalPages}
-              className={`flex items-center gap-1 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-bold text-slate-700 shadow-xs transition ${
-                page >= totalPages ? "pointer-events-none opacity-40" : "hover:bg-slate-50"
-              }`}
+              className={`flex items-center gap-1 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-bold text-slate-700 shadow-xs transition ${page >= totalPages ? "pointer-events-none opacity-40" : "hover:bg-slate-50"
+                }`}
             >
               Next
               <ChevronRight size={16} />

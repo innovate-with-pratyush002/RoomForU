@@ -145,6 +145,76 @@ export const api = {
       });
     },
 
+    async requestSignupOtp(payload: {
+      name: string;
+      email: string;
+      username?: string;
+      password: string;
+    }): Promise<{ success: boolean; status: number; message: string; email: string }> {
+      return await apiFetch("/api/v1/auth/signup/request-otp", {
+        method: "POST",
+        body: JSON.stringify(payload),
+      });
+    },
+
+    async resendSignupOtp(email: string): Promise<{ success: boolean; status: number; message: string }> {
+      return await apiFetch("/api/v1/auth/signup/resend-otp", {
+        method: "POST",
+        body: JSON.stringify({ email }),
+      });
+    },
+
+    async verifySignupOtp(payload: {
+      email: string;
+      otp: string;
+    }): Promise<{ success: boolean; status: number; message: string; user: User }> {
+      return await apiFetch("/api/v1/auth/signup/verify", {
+        method: "POST",
+        body: JSON.stringify(payload),
+      });
+    },
+
+    async requestPasswordResetOtp(identifier: string): Promise<{
+      success: boolean;
+      status: number;
+      message: string;
+      emailMasked?: string;
+      targetEmail?: string;
+    }> {
+      return await apiFetch("/api/v1/auth/password-reset/request-otp", {
+        method: "POST",
+        body: JSON.stringify({ identifier }),
+      });
+    },
+
+    async resendPasswordResetOtp(email: string): Promise<{ success: boolean; status: number; message: string }> {
+      return await apiFetch("/api/v1/auth/password-reset/resend-otp", {
+        method: "POST",
+        body: JSON.stringify({ email }),
+      });
+    },
+
+    async verifyPasswordResetOtp(payload: {
+      email: string;
+      otp: string;
+    }): Promise<{ success: boolean; status: number; message: string; resetToken: string }> {
+      return await apiFetch("/api/v1/auth/password-reset/verify-otp", {
+        method: "POST",
+        body: JSON.stringify(payload),
+      });
+    },
+
+    async confirmPasswordReset(payload: {
+      resetToken: string;
+      newPassword: string;
+      confirmPassword: string;
+    }): Promise<{ success: boolean; status: number; message: string }> {
+      return await apiFetch("/api/v1/auth/password-reset/confirm", {
+        method: "POST",
+        body: JSON.stringify(payload),
+      });
+    },
+
     async logout(): Promise<{ success: boolean; message: string }> {
       return await apiFetch("/api/v1/auth/logout", {
         method: "POST",

@@ -123,6 +123,30 @@ const authLimiter = rateLimit({
     }
 });
 
+const otpRequestLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 10, // 10 OTP requests per 15 minutes per IP
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: {
+        success: false,
+        status: 429,
+        message: "Too many OTP requests from this IP. Please wait a few minutes before trying again."
+    }
+});
+
+const otpVerifyLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 20, // 20 OTP verification attempts per 15 minutes per IP
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: {
+        success: false,
+        status: 429,
+        message: "Too many verification attempts from this IP. Please wait a few minutes before trying again."
+    }
+});
+
 // 4. CSRF Protection for state-changing (mutation) requests
 const csrfProtection = (req, res, next) => {
     // Safe HTTP methods do not change state
@@ -233,6 +257,8 @@ module.exports = {
     corsMiddleware,
     apiLimiter,
     authLimiter,
+    otpRequestLimiter,
+    otpVerifyLimiter,
     csrfProtection,
     noCacheMiddleware,
     allowedOrigins
